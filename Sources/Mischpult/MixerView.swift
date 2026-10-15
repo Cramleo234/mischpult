@@ -121,26 +121,44 @@ private struct DeviceTile: View {
         VStack(alignment: .leading, spacing: 10) {
             DevicePicker(title: "Ausgabe", device: store.defaultOutput, devices: store.outputs,
                          fallbackSymbol: "speaker.slash", select: store.selectOutput)
-            PillSlider(value: Binding(get: { Double(store.masterMuted ? 0 : store.masterVolume) },
-                                      set: { store.setMasterVolume(Float($0)) }),
-                       symbol: speakerSymbol(store.masterMuted ? 0 : store.masterVolume),
-                       dimmed: !store.masterHasVolume,
-                       accessibilityLabel: Text("Gesamtlautstärke"),
-                       accessibilityValue: percent(store.masterVolume),
-                       onSymbolTap: { store.toggleMasterMute() })
-                .disabled(!store.masterHasVolume)
+            HStack(spacing: 8) {
+                Button { store.toggleMasterMute() } label: {
+                    Image(systemName: speakerSymbol(store.masterMuted ? 0 : store.masterVolume))
+                        .frame(width: 22)
+                }
+                .buttonStyle(.borderless)
                 .help(store.masterMuted ? L("Ton einschalten") : L("Stummschalten"))
+                Slider(value: Binding(get: { store.masterVolume },
+                                      set: { store.setMasterVolume($0) }), in: 0...1)
+                    .controlSize(.small)
+                    .disabled(!store.masterHasVolume)
+                    .accessibilityLabel(Text("Gesamtlautstärke"))
+                Text(store.masterHasVolume ? percent(store.masterVolume) : "–")
+                    .font(.caption)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .frame(width: 40, alignment: .trailing)
+            }
 
             Divider().opacity(0.5)
 
             DevicePicker(title: "Eingabe", device: store.defaultInput, devices: store.inputs,
                          fallbackSymbol: "mic.slash", select: store.selectInput)
             if store.inputHasVolume {
-                PillSlider(value: Binding(get: { Double(store.inputVolume) },
-                                          set: { store.setInputVolume(Float($0)) }),
-                           symbol: "mic.fill", height: 22,
-                           accessibilityLabel: Text("Mikrofonpegel"),
-                           accessibilityValue: percent(store.inputVolume))
+                HStack(spacing: 8) {
+                    Image(systemName: "mic")
+                        .frame(width: 22)
+                        .foregroundStyle(.secondary)
+                    Slider(value: Binding(get: { store.inputVolume },
+                                          set: { store.setInputVolume($0) }), in: 0...1)
+                        .controlSize(.small)
+                        .accessibilityLabel(Text("Mikrofonpegel"))
+                    Text(percent(store.inputVolume))
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .frame(width: 40, alignment: .trailing)
+                }
             }
         }
         .padding(12)
@@ -227,22 +245,31 @@ private struct AppsTile: View {
                 .padding(.vertical, 18)
                 .padding(.bottom, 4)
             } else {
-                ScrollView {
-                    VStack(spacing: 2) {
-                        ForEach(store.apps) { app in
-                            AppRow(app: app)
-                        }
-                    }
-                    .padding(.horizontal, 6)
-                    .padding(.bottom, 6)
+                // Das Menüleisten-Fenster misst seine Größe beim Öffnen. Eine Scroll-Ansicht
+                // ohne feste Höhe kann dabei auf null schrumpfen (leeres/abgeschnittenes
+                // Fenster). Darum: wenige Apps ohne Scrollen, viele mit fester Höhe.
+                if store.apps.count <= Self.maxRowsWithoutScrolling {
+                    rows
+                } else {
+                    ScrollView { rows }
+                        .scrollIndicators(.automatic)
+                        .frame(height: 430)
                 }
-                .scrollIndicators(.never)
-                .frame(maxHeight: 400)
-                .fixedSize(horizontal: false, vertical: store.apps.count <= 5)
             }
         }
         .glassTile()
-        .animation(.smooth(duration: 0.25), value: store.apps.map(\.id))
+    }
+
+    static let maxRowsWithoutScrolling = 6
+
+    private var rows: some View {
+        VStack(spacing: 2) {
+            ForEach(store.apps) { app in
+                AppRow(app: app)
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.bottom, 6)
     }
 }
 
@@ -293,13 +320,10 @@ private struct AppRow: View {
                             .foregroundStyle(app.settings.volume > 1.005 && !app.settings.muted
                                              ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
                     }
-                    PillSlider(value: Binding(get: { Double(app.settings.volume) },
-                                              set: { store.setVolume(app.id, Float($0)) }),
-                               range: 0...Double(AppSettings.volumeRange.upperBound),
-                               mark: 1, height: 20, dimmed: app.settings.muted,
-                               accessibilityLabel: Text("Lautstärke \(app.name)"),
-                               accessibilityValue: percent(app.settings.volume))
-                    LevelBar(level: app.level)
+                    VolumeSlider(value: Binding(get: { app.settings.volume },
+                                                set: { store.setVolume(app.id, $0) }),
+                                 level: app.level, muted: app.settings.muted)
+                        .accessibilityLabel(Text("Lautstärke \(app.name)"))
                 }
 
                 Button {
@@ -351,6 +375,26 @@ private struct AppRow: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .help(L("Equalizer aktiv"))
+        }
+    }
+}
+
+/// Lautstärkeregler 0–200 % mit Pegelanzeige darunter (wie in Version 1.0).
+private struct VolumeSlider: View {
+    @Binding var value: Float
+    let level: Float
+    let muted: Bool
+
+    var body: some View {
+        VStack(spacing: 3) {
+            Slider(value: Binding(get: { Double(value) }, set: { newValue in
+                // Bei 100 % leicht einrasten, damit man den Normalwert sicher trifft.
+                value = abs(newValue - 1) < 0.04 ? 1 : Float(newValue)
+            }), in: 0...Double(AppSettings.volumeRange.upperBound))
+            .controlSize(.small)
+            .opacity(muted ? 0.5 : 1)
+            LevelBar(level: level)
+                .padding(.horizontal, 2)
         }
     }
 }
@@ -440,13 +484,11 @@ private struct EQRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(width: 52, alignment: .leading)
-            PillSlider(value: Binding(get: { Double(value) },
-                                      set: { onChange(Float($0.rounded())) }),
-                       range: Double(EQSettings.range.lowerBound)...Double(EQSettings.range.upperBound),
-                       origin: 0, height: 14,
-                       accessibilityLabel: Text(title),
-                       accessibilityValue: String(format: "%+.0f dB", value),
-                       step: 1)
+            Slider(value: Binding(get: { Double(value) }, set: { newValue in
+                onChange(abs(newValue) < 0.6 ? 0 : Float(newValue.rounded()))
+            }), in: Double(EQSettings.range.lowerBound)...Double(EQSettings.range.upperBound))
+            .controlSize(.mini)
+            .accessibilityLabel(Text(title))
             Text(String(format: "%+.0f dB", value))
                 .font(.caption2)
                 .monospacedDigit()
@@ -482,10 +524,9 @@ private struct SettingsTile: View {
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
-                PillSlider(value: $intensity, symbol: "drop.halffull", height: 22,
-                           accessibilityLabel: Text("Glas-Intensität"),
-                           accessibilityValue: Double(intensity).formatted(.percent.precision(.fractionLength(0))),
-                           step: 0.1)
+                Slider(value: $intensity, in: 0...1)
+                    .controlSize(.small)
+                    .accessibilityLabel(Text("Glas-Intensität"))
                 Text("Weniger Intensität macht die Flächen ruhiger und deckender.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)

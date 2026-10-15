@@ -2,6 +2,11 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf**.
 
+## 1.2.1 – 15.10.2026
+
+- Behebt ein leeres oder abgeschnittenes Fenster beim ersten Öffnen (die App-Liste hat jetzt immer eine feste Höhe).
+- Die Regler sehen wieder aus wie in Version 1.0: normale macOS-Schieberegler, darunter gut sichtbar der Pegel jeder App. Das Glas-Design drumherum bleibt.
+
 ## 1.2.0 – 15.10.2026
 
 - Neuer Regler **Glas-Intensität** in den Einstellungen: von vollem Liquid Glass bis zu ruhigen, deckenden Flächen.

@@ -18,6 +18,16 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.2.1", date: "15.10.2026",
+            de: [
+                "Behebt ein leeres oder abgeschnittenes Fenster beim ersten Öffnen.",
+                "Die Regler sehen wieder aus wie in Version 1.0: normale macOS-Schieberegler, darunter gut sichtbar der Pegel jeder App.",
+            ],
+            en: [
+                "Fixes an empty or cut-off window when opening it for the first time.",
+                "Sliders look like in version 1.0 again: standard macOS sliders with each app’s level clearly visible below.",
+            ]),
+        ChangelogEntry(
             version: "1.2.0", date: "15.10.2026",
             de: [
                 "Neuer Regler „Glas-Intensität“ in den Einstellungen: von vollem Liquid Glass bis zu ruhigen, deckenden Flächen.",
