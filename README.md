@@ -21,30 +21,32 @@ Eine kostenlose Menüleisten-App für macOS, inspiriert von SoundSource: Jede Ap
 
 Mischpult nutzt Apples „Process Taps“, die es erst ab macOS 14.2 gibt.
 
-### Herunterladen
+### Mit Homebrew (empfohlen)
+
+```bash
+brew tap cramleo234/public
+brew trust cramleo234/public
+brew install --cask cramleo234/public/mischpult
+```
+
+> **Warum `brew trust`?** Ab Homebrew 6 müssen Taps, die nicht von Homebrew selbst stammen, einmal freigegeben werden.
+
+Aktualisieren:
+
+```bash
+brew update
+brew upgrade --cask cramleo234/public/mischpult
+```
+
+### Ohne Homebrew
 
 1. Die neueste `Mischpult-<version>.dmg` von der [Release-Seite](https://github.com/Cramleo234/mischpult/releases/latest) laden.
 2. Die DMG öffnen und **Mischpult** auf **Programme** ziehen.
 3. Mischpult starten. Das Symbol mit den drei Schiebereglern erscheint oben in der Menüleiste.
 
-> **Warnung beim ersten Start:** Mischpult ist ein kostenloses Hobbyprojekt ohne Apple-Entwicklerkonto. Die App ist deshalb nur ad hoc signiert und **nicht von Apple notarisiert**. macOS meldet beim ersten Öffnen, dass die App nicht überprüft werden kann. So öffnest du sie trotzdem: **Systemeinstellungen → Datenschutz & Sicherheit**, ganz nach unten scrollen und bei Mischpult auf **Trotzdem öffnen** klicken. Unter macOS 14 reicht auch Rechtsklick auf die App → **Öffnen**.
+### Warnung beim ersten Start
 
-Updates gibt es ebenfalls auf der Release-Seite. Zum Aktualisieren Mischpult beenden und die neue Version über die alte ziehen.
-
-### Homebrew (nur für den Entwickler)
-
-Die Cask liegt in einem privaten Tap und funktioniert nur mit Zugriff darauf:
-
-```bash
-brew tap Cramleo234/tap
-brew trust Cramleo234/tap
-brew install --cask cramleo234/tap/mischpult
-brew upgrade --cask cramleo234/tap/mischpult   # aktualisieren
-```
-
-> **Warum `brew trust`?** Ab Homebrew 6 müssen Taps anderer Anbieter freigegeben werden, sonst überspringt Homebrew sie kommentarlos.
->
-> **Warum das Token?** Der Tap ist privat. Homebrew braucht dafür `HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"` in der `~/.zshrc`. Das Token stammt aus dem `gh`-Login und wird weder in Mischpult noch im Repo gespeichert.
+Mischpult ist ein kostenloses Hobbyprojekt ohne Apple-Entwicklerkonto. Die App ist deshalb nur ad hoc signiert und **nicht von Apple notarisiert**. macOS meldet beim ersten Öffnen, dass die App nicht überprüft werden kann. So öffnest du sie trotzdem: **Systemeinstellungen → Datenschutz & Sicherheit**, ganz nach unten scrollen und bei Mischpult auf **Trotzdem öffnen** klicken. Unter macOS 14 reicht auch Rechtsklick auf die App → **Öffnen**.
 
 ### Erlaubnis „Systemaudio“
 
@@ -80,7 +82,7 @@ Für jede App mit veränderten Reglern legt Mischpult einen privaten **Process T
 - `Tests/MischpultCoreTests/` – Tests der Klangverarbeitung.
 - `Support/` – Info.plist, deutsche/englische Texte, Icon- und DMG-Hintergrund-Generator.
 - `build.sh` / `make-dmg.sh` / `release.sh` – Bundle, Signatur, DMG und Veröffentlichung.
-- `packaging/` – [Release-Anleitung](packaging/RELEASING.md) und Cask-Vorlage.
+- `packaging/` – [Release-Anleitung](packaging/RELEASING.md) und Kopie der Cask aus dem öffentlichen Tap.
 
 ## Rechtliches
 

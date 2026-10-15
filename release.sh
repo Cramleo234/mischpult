@@ -25,9 +25,9 @@ elif [[ "$#" -gt 1 ]]; then
 fi
 
 REPO="Cramleo234/mischpult"
-TAP="$ROOT/../homebrew-tap"
+TAP="$ROOT/../homebrew-public"
 CASK="$TAP/Casks/mischpult.rb"
-TEMPLATE="$ROOT/packaging/homebrew-tap/Casks/mischpult.rb"
+TEMPLATE="$ROOT/packaging/homebrew-public/Casks/mischpult.rb"
 for TOOL in gh git swift hdiutil lipo; do
     command -v "$TOOL" >/dev/null || { printf 'Benötigtes Werkzeug fehlt: %s\n' "$TOOL" >&2; exit 1; }
 done
@@ -73,7 +73,7 @@ cat >> "$WORK/notes.md" <<'NOTES'
 notarisiert: Beim ersten Start unter Systemeinstellungen → Datenschutz &
 Sicherheit auf „Trotzdem öffnen“ klicken. Benötigt macOS 14.2 oder neuer.
 
-Mit Zugriff auf den privaten Tap: `brew upgrade --cask cramleo234/tap/mischpult`
+Per Homebrew: `brew update && brew upgrade --cask cramleo234/public/mischpult`
 NOTES
 
 /usr/libexec/PlistBuddy -c "Set CFBundleShortVersionString $VERSION" "$ROOT/Support/Info.plist"
@@ -91,25 +91,18 @@ git push
 COMMIT="$(git rev-parse HEAD)"
 gh release create "v$VERSION" "$DMG" --repo "$REPO" --target "$COMMIT" \
     --title "Mischpult $VERSION" --notes-file "$WORK/notes.md"
-ASSET_ID="$(gh api "repos/$REPO/releases/tags/v$VERSION" \
-    --jq ".assets[] | select(.name == \"Mischpult-$VERSION.dmg\") | .id")"
-[[ "$ASSET_ID" =~ ^[0-9]+$ ]] || { printf 'DMG-Asset-ID konnte nicht bestimmt werden.\n' >&2; exit 1; }
-
-awk -v version="$VERSION" -v sha="$SHA" -v asset="$ASSET_ID" '
+# Öffentlicher Download: die URL in der Cask enthält nur #{version}.
+awk -v version="$VERSION" -v sha="$SHA" '
     /^  version "/ { print "  version \"" version "\""; next }
     /^  sha256 "/ { print "  sha256 \"" sha "\""; next }
-    /api.github.com\/repos\/Cramleo234\/mischpult\/releases\/assets\// {
-        print "  url \"https://api.github.com/repos/Cramleo234/mischpult/releases/assets/" asset "\",";
-        next
-    }
     { print }
 ' "$TEMPLATE" > "$WORK/mischpult.rb"
 cp "$WORK/mischpult.rb" "$TEMPLATE"
 cp "$WORK/mischpult.rb" "$CASK"
-git add packaging/homebrew-tap/Casks/mischpult.rb
+git add packaging/homebrew-public/Casks/mischpult.rb
 git commit -m "Homebrew-Vorlage für Mischpult $VERSION aktualisieren"
 git push
 git -C "$TAP" add Casks/mischpult.rb
-git -C "$TAP" commit -m "Mischpult $VERSION im privaten Tap aktualisieren"
+git -C "$TAP" commit -m "Mischpult $VERSION im öffentlichen Tap aktualisieren"
 git -C "$TAP" push
-printf 'Veröffentlicht: Mischpult %s\nAktualisieren nach Beenden der App: brew update && brew upgrade --cask cramleo234/tap/mischpult\n' "$VERSION"
+printf 'Veröffentlicht: Mischpult %s\nAktualisieren nach Beenden der App: brew update && brew upgrade --cask cramleo234/public/mischpult\n' "$VERSION"
