@@ -11,15 +11,23 @@ struct MixerView: View {
         VStack(alignment: .leading, spacing: 12) {
             Header(showSettings: $showSettings)
             GlassGroup(spacing: 12) {
-                VStack(spacing: 10) {
-                    if showSettings {
-                        SettingsTile(intensity: $glassIntensity)
-                            .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
-                    } else {
+                // Beide Ansichten liegen immer übereinander, nur die Sichtbarkeit wechselt.
+                // So ändert sich die Fenstergröße beim Umschalten nicht – sonst verrutscht
+                // das Menüleisten-Fenster und löst sich von der Menüleiste.
+                ZStack(alignment: .top) {
+                    VStack(spacing: 10) {
                         if store.permission == .denied { PermissionBanner() }
                         DeviceTile()
                         AppsTile()
                     }
+                    .opacity(showSettings ? 0 : 1)
+                    .allowsHitTesting(!showSettings)
+                    .accessibilityHidden(showSettings)
+
+                    SettingsTile(intensity: $glassIntensity)
+                        .opacity(showSettings ? 1 : 0)
+                        .allowsHitTesting(showSettings)
+                        .accessibilityHidden(!showSettings)
                 }
             }
             Text("Unveränderte Apps laufen direkt zum Gerät.")
@@ -30,7 +38,8 @@ struct MixerView: View {
         .padding(14)
         .frame(width: 360)
         .environment(\.glassIntensity, glassIntensity)
-        .animation(.spring(response: 0.32, dampingFraction: 0.88), value: showSettings)
+        // Nur die Deckkraft wird animiert, nie die Größe.
+        .animation(.easeInOut(duration: 0.18), value: showSettings)
         .onAppear { store.setVisible(true) }
         .onDisappear {
             store.setVisible(false)
@@ -327,9 +336,9 @@ private struct AppRow: View {
                 }
 
                 Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                        store.expandedApp = expanded ? nil : app.id
-                    }
+                    // Ohne Animation: eine animierte Höhenänderung lässt das
+                    // Menüleisten-Fenster verrutschen.
+                    store.expandedApp = expanded ? nil : app.id
                 } label: {
                     Image(systemName: "chevron.down")
                         .font(.system(size: 10, weight: .bold))
@@ -350,7 +359,6 @@ private struct AppRow: View {
             }
             if expanded {
                 AppDetails(app: app)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(8)

@@ -18,6 +18,14 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.2.2", date: "15.10.2026",
+            de: [
+                "Das Fenster bleibt jetzt an der Menüleiste, wenn man die Einstellungen (Zahnrad) öffnet oder eine App aufklappt.",
+            ],
+            en: [
+                "The window now stays attached to the menu bar when opening Settings (gear) or expanding an app.",
+            ]),
+        ChangelogEntry(
             version: "1.2.1", date: "15.10.2026",
             de: [
                 "Behebt ein leeres oder abgeschnittenes Fenster beim ersten Öffnen.",

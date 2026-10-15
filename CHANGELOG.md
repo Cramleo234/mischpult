@@ -2,6 +2,10 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf**.
 
+## 1.2.2 – 15.10.2026
+
+- Das Fenster bleibt jetzt an der Menüleiste, wenn man die Einstellungen (Zahnrad) öffnet oder eine App aufklappt. Vorher änderte sich die Fenstergröße animiert, und das Fenster verrutschte.
+
 ## 1.2.1 – 15.10.2026
 
 - Behebt ein leeres oder abgeschnittenes Fenster beim ersten Öffnen (die App-Liste hat jetzt immer eine feste Höhe).
