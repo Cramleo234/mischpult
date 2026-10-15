@@ -18,6 +18,14 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.2.3", date: "15.10.2026",
+            de: [
+                "Behebt, dass Einstellungen und Regler gleichzeitig übereinander angezeigt wurden.",
+            ],
+            en: [
+                "Fixes Settings and the sliders being shown on top of each other at the same time.",
+            ]),
+        ChangelogEntry(
             version: "1.2.2", date: "15.10.2026",
             de: [
                 "Das Fenster bleibt jetzt an der Menüleiste, wenn man die Einstellungen (Zahnrad) öffnet oder eine App aufklappt.",

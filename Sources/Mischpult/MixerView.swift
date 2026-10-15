@@ -6,28 +6,37 @@ struct MixerView: View {
     @EnvironmentObject private var store: MixerStore
     @AppStorage(GlassSettings.key) private var glassIntensity = GlassSettings.defaultIntensity
     @State private var showSettings = false
+    /// Zuletzt gemessene Höhe der Regler-Ansicht; die Einstellungen bekommen genau
+    /// diese Höhe, damit sich das Fenster beim Umschalten nicht verändert.
+    @State private var mainHeight: CGFloat = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Header(showSettings: $showSettings)
             GlassGroup(spacing: 12) {
-                // Beide Ansichten liegen immer übereinander, nur die Sichtbarkeit wechselt.
-                // So ändert sich die Fenstergröße beim Umschalten nicht – sonst verrutscht
-                // das Menüleisten-Fenster und löst sich von der Menüleiste.
-                ZStack(alignment: .top) {
+                // Immer nur eine Ansicht zeigen: Glasflächen ignorieren Deckkraft-
+                // Änderungen, übereinandergelegte Ebenen wären beide sichtbar.
+                // Die Einstellungen übernehmen die Höhe der Regler-Ansicht (bei Bedarf
+                // scrollbar), damit das Menüleisten-Fenster nicht verrutscht.
+                if showSettings {
+                    ScrollView {
+                        SettingsTile(intensity: $glassIntensity)
+                    }
+                    .scrollIndicators(.automatic)
+                    .frame(height: mainHeight > 0 ? mainHeight : nil)
+                } else {
                     VStack(spacing: 10) {
                         if store.permission == .denied { PermissionBanner() }
                         DeviceTile()
                         AppsTile()
                     }
-                    .opacity(showSettings ? 0 : 1)
-                    .allowsHitTesting(!showSettings)
-                    .accessibilityHidden(showSettings)
-
-                    SettingsTile(intensity: $glassIntensity)
-                        .opacity(showSettings ? 1 : 0)
-                        .allowsHitTesting(showSettings)
-                        .accessibilityHidden(!showSettings)
+                    .background {
+                        GeometryReader { proxy in
+                            Color.clear
+                                .onAppear { mainHeight = proxy.size.height }
+                                .onChange(of: proxy.size.height) { _, height in mainHeight = height }
+                        }
+                    }
                 }
             }
             Text("Unveränderte Apps laufen direkt zum Gerät.")
@@ -38,8 +47,6 @@ struct MixerView: View {
         .padding(14)
         .frame(width: 360)
         .environment(\.glassIntensity, glassIntensity)
-        // Nur die Deckkraft wird animiert, nie die Größe.
-        .animation(.easeInOut(duration: 0.18), value: showSettings)
         .onAppear { store.setVisible(true) }
         .onDisappear {
             store.setVisible(false)

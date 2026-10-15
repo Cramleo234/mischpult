@@ -2,6 +2,10 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf**.
 
+## 1.2.3 – 15.10.2026
+
+- Behebt, dass Einstellungen und Regler gleichzeitig übereinander angezeigt wurden (Glasflächen lassen sich nicht über die Deckkraft ausblenden). Es wird wieder nur eine Ansicht gezeigt; die Einstellungen übernehmen die Höhe der Regler-Ansicht, damit das Fenster an der Menüleiste bleibt.
+
 ## 1.2.2 – 15.10.2026
 
 - Das Fenster bleibt jetzt an der Menüleiste, wenn man die Einstellungen (Zahnrad) öffnet oder eine App aufklappt. Vorher änderte sich die Fenstergröße animiert, und das Fenster verrutschte.
