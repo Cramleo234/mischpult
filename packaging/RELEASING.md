@@ -8,7 +8,7 @@ Commits nur als `Cramleo <89691483+Cramleo234@users.noreply.github.com>` (in `.g
 1. `gh auth login` und `gh auth setup-git` als **Cramleo234** (macht der Nutzer selbst; keine Tokens in Dateien).
 2. Repo anlegen (erst privat, seit 1.0.0 öffentlich): `gh repo create Cramleo234/mischpult --private --source . --push`, später `gh repo edit Cramleo234/mischpult --visibility public --accept-visibility-change-consequences`.
    Anonyme Commit-Adresse: `git config user.name Cramleo` und `git config user.email 89691483+Cramleo234@users.noreply.github.com`.
-3. Beschreibung setzen: `gh repo edit Cramleo234/mischpult --description "Lautstärke, Ausgabegerät und Equalizer pro App – inoffizielle SoundSource-Alternative"`.
+3. Beschreibung setzen: `gh repo edit Cramleo234/mischpult --description "Lautstärke, Ausgabegerät und Equalizer pro App für macOS – ein Hobbyprojekt"`.
 4. Der öffentliche Tap liegt daneben unter `../homebrew-public` (`Cramleo234/homebrew-public`, ebenfalls mit anonymer Commit-Adresse).
 
 ## Erster Release (1.0.0)

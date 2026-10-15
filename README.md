@@ -1,6 +1,6 @@
 # Mischpult
 
-Eine kostenlose Menüleisten-App für macOS, inspiriert von SoundSource: Jede App bekommt ihren eigenen Lautstärkeregler, auf Wunsch ihr eigenes Ausgabegerät und einen Equalizer. Auf Deutsch und Englisch.
+Ein kostenloses Hobbyprojekt: eine Menüleisten-App für macOS, mit der jede App ihren eigenen Lautstärkeregler, auf Wunsch ihr eigenes Ausgabegerät und einen Equalizer bekommt. Auf Deutsch und Englisch.
 
 ## Features
 
@@ -86,7 +86,7 @@ Für jede App mit veränderten Reglern legt Mischpult einen privaten **Process T
 
 ## Rechtliches
 
-Mischpult ist ein privates Hobbyprojekt. Es enthält keinen fremden Code und keine fremden Grafiken; Icon und DMG-Hintergrund sind eigenes Artwork. Die Nutzung erfolgt ohne Gewähr (siehe Lizenz).
+Mischpult ist ein privates, nicht kommerzielles Hobbyprojekt. Es ist kostenlos, wird nicht verkauft und es gibt keinen Support. Es enthält keinen fremden Code und keine fremden Grafiken; Icon und DMG-Hintergrund sind eigenes Artwork. Die Nutzung erfolgt ohne Gewähr (siehe Lizenz).
 
 Copyright © 2026 Cramleo
 

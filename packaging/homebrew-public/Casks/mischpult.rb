@@ -4,7 +4,7 @@ cask "mischpult" do
 
   url "https://github.com/Cramleo234/mischpult/releases/download/v#{version}/Mischpult-#{version}.dmg"
   name "Mischpult"
-  desc "Lautstärke, Ausgabegerät und Equalizer pro App – inspiriert von SoundSource"
+  desc "Lautstärke, Ausgabegerät und Equalizer pro App – ein Hobbyprojekt"
   homepage "https://github.com/Cramleo234/mischpult"
 
   livecheck do
