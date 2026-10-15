@@ -86,7 +86,7 @@ Für jede App mit veränderten Reglern legt Mischpult einen privaten **Process T
 
 ## Rechtliches
 
-Mischpult ist ein inoffizielles Hobbyprojekt und steht in keiner Verbindung zu Rogue Amoeba oder SoundSource. „SoundSource“ ist eine Marke von Rogue Amoeba und wird hier nur zum Vergleich genannt. Mischpult enthält keinen fremden Code und keine fremden Grafiken; Icon und DMG-Hintergrund sind eigenes Artwork. Die Nutzung erfolgt ohne Gewähr (siehe Lizenz).
+Mischpult ist ein privates Hobbyprojekt. Es enthält keinen fremden Code und keine fremden Grafiken; Icon und DMG-Hintergrund sind eigenes Artwork. Die Nutzung erfolgt ohne Gewähr (siehe Lizenz).
 
 Copyright © 2026 Cramleo
 
