@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "Mischpult";
+"CFBundleName" = "Mischpult";
+"NSAudioCaptureUsageDescription" = "Mischpult routes each app's sound through its own volume control.";

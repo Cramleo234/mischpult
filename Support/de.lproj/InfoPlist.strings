@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "Mischpult";
+"CFBundleName" = "Mischpult";
+"NSAudioCaptureUsageDescription" = "Mischpult leitet den Ton jeder App über ihren eigenen Lautstärkeregler.";
