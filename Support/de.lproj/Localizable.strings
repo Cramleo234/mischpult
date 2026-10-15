@@ -24,14 +24,12 @@
 "Beim Anmelden starten" = "Beim Anmelden starten";
 "Ton-Einstellungen öffnen …" = "Ton-Einstellungen öffnen …";
 "Erlaubnis Systemaudio …" = "Erlaubnis Systemaudio …";
-"Mischpult beenden" = "Mischpult beenden";
 "Keine App spielt Ton" = "Keine App spielt Ton";
 "1 App spielt Ton" = "1 App spielt Ton";
 "%d Apps spielen Ton" = "%d Apps spielen Ton";
 "Gesamtlautstärke" = "Gesamtlautstärke";
 "Mikrofonpegel" = "Mikrofonpegel";
 "Apps" = "Apps";
-"Optionen" = "Optionen";
 "Versionsverlauf …" = "Versionsverlauf …";
 "Versionsverlauf" = "Versionsverlauf";
 "Mischpult %@ – ein Hobbyprojekt" = "Mischpult %@ – ein Hobbyprojekt";
@@ -41,3 +39,8 @@
 "%@: Ton einschalten" = "%@: Ton einschalten";
 "%@: Stummschalten" = "%@: Stummschalten";
 "Lautstärke %@" = "Lautstärke %@";
+"Einstellungen" = "Einstellungen";
+"Einstellungen schließen" = "Einstellungen schließen";
+"Glas-Intensität" = "Glas-Intensität";
+"Weniger Intensität macht die Flächen ruhiger und deckender." = "Weniger Intensität macht die Flächen ruhiger und deckender.";
+"Beenden" = "Beenden";

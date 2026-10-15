@@ -1,6 +1,12 @@
 # Versionsverlauf
 
-Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **„…“ → Versionsverlauf**.
+Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf**.
+
+## 1.2.0 – 15.10.2026
+
+- Neuer Regler **Glas-Intensität** in den Einstellungen: von vollem Liquid Glass bis zu ruhigen, deckenden Flächen.
+- Die Optionen sind jetzt ein Einstellungsfeld (Zahnrad oben rechts) statt eines Menüs.
+- Der Versionsverlauf scrollt jetzt flüssig (keine Glasflächen mehr in der Scroll-Ansicht).
 
 ## 1.1.0 – 15.10.2026
 

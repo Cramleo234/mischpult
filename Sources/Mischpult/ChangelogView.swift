@@ -18,10 +18,22 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.2.0", date: "15.10.2026",
+            de: [
+                "Neuer Regler „Glas-Intensität“ in den Einstellungen: von vollem Liquid Glass bis zu ruhigen, deckenden Flächen.",
+                "Die Optionen sind jetzt ein Einstellungsfeld (Zahnrad oben rechts) statt eines Menüs.",
+                "Der Versionsverlauf scrollt jetzt flüssig.",
+            ],
+            en: [
+                "New “Glass intensity” slider in Settings: from full Liquid Glass to calm, opaque surfaces.",
+                "Options are now a settings panel (gear at the top right) instead of a menu.",
+                "The version history now scrolls smoothly.",
+            ]),
+        ChangelogEntry(
             version: "1.1.0", date: "15.10.2026",
             de: [
                 "Neues Design im Liquid-Glass-Stil von macOS: Glas-Kacheln und große Regler wie im Kontrollzentrum.",
-                "Versionsverlauf direkt in der App (Menü „…“ → Versionsverlauf).",
+                "Versionsverlauf direkt in der App.",
                 "Mischpult fragt jetzt zuerst nach der Erlaubnis „Systemaudio“ – Apps werden während des Dialogs nicht mehr stumm.",
                 "Wird die Erlaubnis entzogen, gibt Mischpult alle Apps sofort wieder frei.",
                 "Behebt einen möglichen Absturz beim Erlaubnisdialog.",
@@ -34,7 +46,7 @@ enum Changelog {
             ],
             en: [
                 "New design in the macOS Liquid Glass style: glass tiles and large sliders like Control Center.",
-                "Version history right inside the app (“…” menu → Version History).",
+                "Version history right inside the app.",
                 "Mischpult now asks for the “System Audio” permission first – apps no longer go silent while the dialog is open.",
                 "If the permission is revoked, Mischpult releases all apps immediately.",
                 "Fixes a possible crash in the permission dialog.",
@@ -85,11 +97,13 @@ enum ChangelogWindow {
     }
 }
 
+/// Bewusst ohne Glas-Effekte: Viele Glasflächen in einer Scroll-Ansicht müssen
+/// bei jedem Bild neu berechnet werden und lassen das Scrollen ruckeln.
 struct ChangelogView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
+            LazyVStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 12) {
                     Image(nsImage: NSApp.applicationIconImage)
                         .resizable()
@@ -102,48 +116,55 @@ struct ChangelogView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .padding(.bottom, 4)
-                GlassGroup(spacing: 14) {
-                    VStack(spacing: 12) {
-                        ForEach(Changelog.entries) { entry in
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(alignment: .firstTextBaseline) {
-                                    Text(String(format: L("Version %@"), entry.version))
-                                        .font(.headline)
-                                    if entry.id == Changelog.entries.first?.id {
-                                        Text("Aktuell")
-                                            .font(.caption2.weight(.semibold))
-                                            .padding(.horizontal, 7)
-                                            .padding(.vertical, 2)
-                                            .foregroundStyle(.white)
-                                            .background(Capsule().fill(Color.accentColor))
-                                    }
-                                    Spacer()
-                                    Text(entry.date)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                ForEach(entry.items, id: \.self) { item in
-                                    HStack(alignment: .firstTextBaseline, spacing: 7) {
-                                        Circle()
-                                            .fill(Color.accentColor)
-                                            .frame(width: 5, height: 5)
-                                            .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
-                                        Text(item)
-                                            .font(.callout)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                    }
-                                }
-                            }
-                            .padding(14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .glassTile(cornerRadius: 18)
-                        }
-                    }
+                .padding(.bottom, 6)
+                ForEach(Changelog.entries) { entry in
+                    EntryCard(entry: entry, isCurrent: entry.id == Changelog.entries.first?.id)
                 }
             }
             .padding(20)
+            .padding(.top, 14)
         }
         .frame(width: 460, height: 520)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+}
+
+private struct EntryCard: View {
+    let entry: ChangelogEntry
+    let isCurrent: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(String(format: L("Version %@"), entry.version))
+                    .font(.headline)
+                if isCurrent {
+                    Text("Aktuell")
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .foregroundStyle(.white)
+                        .background(Capsule().fill(Color.accentColor))
+                }
+                Spacer()
+                Text(entry.date)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(entry.items, id: \.self) { item in
+                HStack(alignment: .firstTextBaseline, spacing: 7) {
+                    Text(verbatim: "•").foregroundStyle(Color.accentColor)
+                    Text(item)
+                        .font(.callout)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(Color.primary.opacity(0.05)))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .strokeBorder(Color.primary.opacity(0.07)))
     }
 }

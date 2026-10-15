@@ -4,15 +4,22 @@ import SwiftUI
 /// Das Fenster unter dem Menüleisten-Symbol.
 struct MixerView: View {
     @EnvironmentObject private var store: MixerStore
+    @AppStorage(GlassSettings.key) private var glassIntensity = GlassSettings.defaultIntensity
+    @State private var showSettings = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Header()
+            Header(showSettings: $showSettings)
             GlassGroup(spacing: 12) {
                 VStack(spacing: 10) {
-                    if store.permission == .denied { PermissionBanner() }
-                    DeviceTile()
-                    AppsTile()
+                    if showSettings {
+                        SettingsTile(intensity: $glassIntensity)
+                            .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
+                    } else {
+                        if store.permission == .denied { PermissionBanner() }
+                        DeviceTile()
+                        AppsTile()
+                    }
                 }
             }
             Text("Unveränderte Apps laufen direkt zum Gerät.")
@@ -22,8 +29,13 @@ struct MixerView: View {
         }
         .padding(14)
         .frame(width: 360)
+        .environment(\.glassIntensity, glassIntensity)
+        .animation(.spring(response: 0.32, dampingFraction: 0.88), value: showSettings)
         .onAppear { store.setVisible(true) }
-        .onDisappear { store.setVisible(false) }
+        .onDisappear {
+            store.setVisible(false)
+            showSettings = false
+        }
     }
 }
 
@@ -31,6 +43,7 @@ struct MixerView: View {
 
 private struct Header: View {
     @EnvironmentObject private var store: MixerStore
+    @Binding var showSettings: Bool
 
     private var subtitle: String {
         let playing = store.apps.filter(\.isPlaying).count
@@ -57,7 +70,19 @@ private struct Header: View {
                     .contentTransition(.numericText())
             }
             Spacer()
-            OptionsMenu()
+            Button {
+                showSettings.toggle()
+            } label: {
+                Image(systemName: showSettings ? "xmark" : "gearshape.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(width: 30, height: 30)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .glassCircle(interactive: true)
+            .help(showSettings ? L("Einstellungen schließen") : L("Einstellungen"))
+            .accessibilityLabel(showSettings ? Text("Einstellungen schließen") : Text("Einstellungen"))
         }
         .padding(.horizontal, 2)
     }
@@ -431,42 +456,105 @@ private struct EQRow: View {
     }
 }
 
-// MARK: Optionen
+// MARK: Einstellungen
 
-private struct OptionsMenu: View {
+private struct SettingsTile: View {
     @EnvironmentObject private var store: MixerStore
+    @Binding var intensity: Double
 
     var body: some View {
-        Menu {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Einstellungen")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+
             Toggle("Alle Apps anzeigen", isOn: $store.showAllApps)
             Toggle("Beim Anmelden starten", isOn: Binding(get: { store.launchAtLogin },
                                                           set: { store.setLaunchAtLogin($0) }))
-            Divider()
-            Button("Ton-Einstellungen öffnen …") {
-                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Sound-Settings.extension")!)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Glas-Intensität")
+                    Spacer()
+                    Text(Double(intensity).formatted(.percent.precision(.fractionLength(0))))
+                        .font(.caption.weight(.medium))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                PillSlider(value: $intensity, symbol: "drop.halffull", height: 22,
+                           accessibilityLabel: Text("Glas-Intensität"),
+                           accessibilityValue: Double(intensity).formatted(.percent.precision(.fractionLength(0))),
+                           step: 0.1)
+                Text("Weniger Intensität macht die Flächen ruhiger und deckender.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
-            Button("Erlaubnis Systemaudio …") { store.openPermissionSettings() }
-            Button("Versionsverlauf …") { ChangelogWindow.show() }
-            Divider()
-            Text(aboutText)
-            Button("Mischpult beenden") { NSApp.terminate(nil) }
-                .keyboardShortcut("q")
-        } label: {
-            Image(systemName: "ellipsis")
-                .font(.system(size: 13, weight: .bold))
-                .frame(width: 30, height: 30)
-                .contentShape(Circle())
+
+            Divider().opacity(0.5)
+
+            VStack(spacing: 2) {
+                SettingsLink(title: "Ton-Einstellungen öffnen …", symbol: "speaker.wave.2") {
+                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Sound-Settings.extension")!)
+                }
+                SettingsLink(title: "Erlaubnis Systemaudio …", symbol: "lock.shield") {
+                    store.openPermissionSettings()
+                }
+                SettingsLink(title: "Versionsverlauf …", symbol: "clock.arrow.circlepath") {
+                    ChangelogWindow.show()
+                }
+            }
+
+            HStack {
+                Text(aboutText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Beenden") { NSApp.terminate(nil) }
+                    .keyboardShortcut("q")
+                    .controlSize(.small)
+                    .glassButtonStyle()
+            }
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .glassCircle(interactive: true)
-        .accessibilityLabel(Text("Optionen"))
+        .toggleStyle(.switch)
+        .controlSize(.small)
+        .font(.system(size: 12.5))
+        .padding(12)
+        .glassTile()
     }
 
     private var aboutText: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
         return String(format: L("Mischpult %@ – ein Hobbyprojekt"), version)
+    }
+}
+
+private struct SettingsLink: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: symbol)
+                    .frame(width: 18)
+                    .foregroundStyle(.secondary)
+                Text(title)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 5)
+            .background(RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.primary.opacity(hovering ? 0.07 : 0)))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
     }
 }
 
