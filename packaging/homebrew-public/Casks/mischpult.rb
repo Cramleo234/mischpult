@@ -1,6 +1,6 @@
 cask "mischpult" do
-  version "1.0.0"
-  sha256 "2c88a6621efb12822f53d6b1466091b437dae2334765950cc3642fed4caba6db"
+  version "1.1.0"
+  sha256 "719263bfee371a7576c3b7a0a3cf0b413ff980a8b632156b412c3715f7a48678"
 
   url "https://github.com/Cramleo234/mischpult/releases/download/v#{version}/Mischpult-#{version}.dmg"
   name "Mischpult"
