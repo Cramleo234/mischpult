@@ -12,18 +12,10 @@ struct AppEntry: Identifiable {
     var appPID: pid_t
     var processObjectIDs: [AudioObjectID]
     var isPlaying: Bool
-    var isRunning: Bool
     var settings: AppSettings
+    var icon: NSImage
     var level: Float = 0
     var error: String?
-
-    var icon: NSImage {
-        if let app = NSRunningApplication(processIdentifier: appPID), let icon = app.icon { return icon }
-        if let bundleID, let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
-            return NSWorkspace.shared.icon(forFile: url.path)
-        }
-        return NSImage(systemSymbolName: "app.dashed", accessibilityDescription: nil) ?? NSImage()
-    }
 }
 
 @MainActor
@@ -55,6 +47,10 @@ final class MixerStore: ObservableObject {
     private var listeners: [CAListener] = []
     private var timer: Timer?
     private var isVisible = false
+    /// App-Symbole einmal laden statt bei jedem Neuzeichnen (20 × pro Sekunde).
+    private var icons: [String: NSImage] = [:]
+    private var lastTapAttempt: [String: Date] = [:]
+    private var permissionRequestPending = false
 
     init() {
         showAllApps = defaults.bool(forKey: "showAllApps")
@@ -83,7 +79,7 @@ final class MixerStore: ObservableObject {
     func setVisible(_ visible: Bool) {
         isVisible = visible
         if visible {
-            permission = AudioPermission.status
+            checkPermission()
             launchAtLogin = SMAppService.mainApp.status == .enabled
             refreshAll()
         }
@@ -93,7 +89,7 @@ final class MixerStore: ObservableObject {
     private func scheduleTimer() {
         timer?.invalidate()
         // Offen: flüssige Pegelanzeige. Geschlossen: nur gelegentlich nach neuen Apps sehen.
-        let interval: TimeInterval = isVisible ? 1.0 / 20 : 2
+        let interval: TimeInterval = isVisible ? 1.0 / 20 : 3
         var ticks = 0
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -102,8 +98,10 @@ final class MixerStore: ObservableObject {
                 if self.isVisible {
                     self.updateLevels()
                     if ticks % 10 == 0 { self.refreshApps(); self.refreshVolumes() }
+                    if ticks % 40 == 0 { self.checkPermission() }
                 } else {
                     self.refreshApps()
+                    if ticks % 5 == 0 { self.checkPermission() }
                 }
             }
         }
@@ -185,7 +183,7 @@ final class MixerStore: ObservableObject {
             guard visible else { continue }
             entries.append(AppEntry(id: group.id, name: group.name, bundleID: group.bundleID,
                                     appPID: group.appPID, processObjectIDs: group.processObjectIDs,
-                                    isPlaying: group.isPlaying, isRunning: true, settings: stored,
+                                    isPlaying: group.isPlaying, settings: stored, icon: icon(for: group),
                                     level: apps.first { $0.id == group.id }?.level ?? 0,
                                     error: tapErrors[group.id]))
         }
@@ -194,7 +192,21 @@ final class MixerStore: ObservableObject {
             return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
         }
         apps = entries
+        icons = icons.filter { key, _ in groups.contains { $0.id == key } }
         syncTaps(groups: groups)
+    }
+
+    private func icon(for group: AudioAppGroup) -> NSImage {
+        if let cached = icons[group.id] { return cached }
+        var image: NSImage?
+        if let app = NSRunningApplication(processIdentifier: group.appPID) { image = app.icon }
+        if image == nil, let bundleID = group.bundleID,
+           let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
+            image = NSWorkspace.shared.icon(forFile: url.path)
+        }
+        let result = image ?? NSImage(systemSymbolName: "app.dashed", accessibilityDescription: nil) ?? NSImage()
+        icons[group.id] = result
+        return result
     }
 
     private func syncTaps(groups: [AudioAppGroup]) {
@@ -232,8 +244,21 @@ final class MixerStore: ObservableObject {
             }
         }
         if permission != .granted { permission = AudioPermission.status }
-        // Ohne Erlaubnis bliebe die App nur stumm – dann lieber gar nicht eingreifen.
-        guard permission != .denied else { return }
+        switch permission {
+        case .denied:
+            // Ohne Erlaubnis bliebe die App nur stumm – dann lieber gar nicht eingreifen.
+            return
+        case .notDetermined:
+            // Erst fragen, dann umleiten – sonst wäre die App während des Dialogs stumm.
+            requestPermission()
+            return
+        case .granted, .unavailable:
+            break
+        }
+        // Nach einem Fehler nicht bei jeder Reglerbewegung neu versuchen.
+        if tapErrors[group.id] != nil,
+           Date().timeIntervalSince(lastTapAttempt[group.id] ?? .distantPast) < 5 { return }
+        lastTapAttempt[group.id] = Date()
         do {
             taps[group.id] = try AppTap(name: group.name, processObjectIDs: group.processObjectIDs,
                                         outputUID: uid, gain: settings.effectiveGain, eq: settings.eq)
@@ -300,20 +325,36 @@ final class MixerStore: ObservableObject {
     func reset(_ id: String) { change(id) { $0 = AppSettings() } }
 
     private func persist() {
-        // Nur abweichende Einstellungen merken.
-        let relevant = settings.filter { $0.value.needsTap }
+        // Nur abweichende Einstellungen merken – und nur für echte Apps: Prozessnummern
+        // werden nach einem Neustart neu vergeben und träfen sonst eine fremde App.
+        let relevant = settings.filter { $0.value.needsTap && !$0.key.hasPrefix("pid:") }
         if let data = try? JSONEncoder().encode(relevant) { defaults.set(data, forKey: "appSettings") }
     }
 
     // MARK: Erlaubnis & Optionen
 
     func requestPermission() {
+        guard !permissionRequestPending else { return }
+        permissionRequestPending = true
         AudioPermission.request { [weak self] _ in
             guard let self else { return }
+            self.permissionRequestPending = false
             self.permission = AudioPermission.status
             // Taps, die ohne Erlaubnis entstanden sind, neu aufbauen.
             self.stopAllTaps()
+            self.tapErrors.removeAll()
             self.refreshApps()
+        }
+    }
+
+    /// Wurde die Erlaubnis in den Systemeinstellungen entzogen, alle Umleitungen
+    /// abbauen – sonst blieben die betroffenen Apps stumm.
+    private func checkPermission() {
+        let current = AudioPermission.status
+        if current == .denied && !taps.isEmpty { stopAllTaps() }
+        if current != permission {
+            permission = current
+            if current == .granted { tapErrors.removeAll(); refreshApps() }
         }
     }
 

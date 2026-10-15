@@ -3,22 +3,25 @@ import Foundation
 /// Erlaubnis „Nur Systemaudio aufnehmen“, ohne die Process-Taps stumm bleiben.
 ///
 /// Apple bietet dafür keine öffentliche Abfrage; wie bei vielen Audio-Werkzeugen
-/// wird das TCC-Framework dynamisch geladen. Fehlt es, gilt der Status als unbekannt.
+/// wird das TCC-Framework dynamisch geladen. Fehlt es, gilt der Status als „nicht abfragbar“.
 public enum AudioPermission {
-    public enum Status: Sendable { case granted, denied, unknown }
+    /// `notDetermined`: noch nie gefragt. `unavailable`: Abfrage nicht möglich
+    /// (dann einfach versuchen – macOS fragt beim ersten Tap selbst).
+    public enum Status: Sendable { case granted, denied, notDetermined, unavailable }
 
     private static let service = "kTCCServiceAudioCapture" as CFString
     private static let handle = dlopen("/System/Library/PrivateFrameworks/TCC.framework/Versions/A/TCC", RTLD_NOW)
 
     private typealias Preflight = @convention(c) (CFString, CFDictionary?) -> Int
-    private typealias Request = @convention(c) (CFString, CFDictionary?, @escaping (Bool) -> Void) -> Void
+    // Der Rückruf ist ein Objective-C-Block, keine Swift-Closure.
+    private typealias Request = @convention(c) (CFString, CFDictionary?, @convention(block) (Bool) -> Void) -> Void
 
     public static var status: Status {
-        guard let handle, let symbol = dlsym(handle, "TCCAccessPreflight") else { return .unknown }
+        guard let handle, let symbol = dlsym(handle, "TCCAccessPreflight") else { return .unavailable }
         switch unsafeBitCast(symbol, to: Preflight.self)(service, nil) {
         case 0: return .granted
         case 1: return .denied
-        default: return .unknown
+        default: return .notDetermined
         }
     }
 
@@ -28,9 +31,10 @@ public enum AudioPermission {
             DispatchQueue.main.async { completion(false) }
             return
         }
-        unsafeBitCast(symbol, to: Request.self)(service, nil) { granted in
+        let callback: @convention(block) (Bool) -> Void = { granted in
             DispatchQueue.main.async { completion(granted) }
         }
+        unsafeBitCast(symbol, to: Request.self)(service, nil, callback)
     }
 
     public static let settingsURL = URL(

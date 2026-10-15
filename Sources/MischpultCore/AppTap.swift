@@ -15,7 +15,7 @@ public final class AppTap {
     private var tapID = AudioObjectID(kAudioObjectUnknown)
     private var aggregateID = AudioObjectID(kAudioObjectUnknown)
     private var ioProcID: AudioDeviceIOProcID?
-    private let ioQueue = DispatchQueue(label: "local.private.mischpult.io", qos: .userInteractive)
+    private var sampleRateListener: CAListener?
 
     public init(name: String, processObjectIDs: [AudioObjectID], outputUID: String,
                 gain: Float, eq: EQSettings) throws {
@@ -51,12 +51,21 @@ public final class AppTap {
             processor.setEQ(eq, sampleRate: AudioDevices.nominalSampleRate(aggregateID))
 
             let processor = self.processor
-            try check(AudioDeviceCreateIOProcIDWithBlock(&ioProcID, aggregateID, ioQueue) {
+            // Kein eigener Dispatch-Queue: der Block läuft direkt auf dem
+            // Echtzeit-Thread von Core Audio (weniger Verzögerung, keine Aussetzer).
+            try check(AudioDeviceCreateIOProcIDWithBlock(&ioProcID, aggregateID, nil) {
                 _, input, _, output, _ in
                 processor.process(input: input, output: output)
             }, "Audio-Rückruf anlegen")
             disableDeviceInputs()
             try check(AudioDeviceStart(aggregateID, ioProcID), "Wiedergabe starten")
+            // Wechselt das Gerät die Abtastrate, Equalizer und Glättung nachziehen.
+            let deviceID = aggregateID
+            sampleRateListener = CAListener(object: deviceID,
+                                            address: CAProperty.address(kAudioDevicePropertyNominalSampleRate)) {
+                [weak processor] in
+                processor?.updateSampleRate(AudioDevices.nominalSampleRate(deviceID))
+            }
         } catch {
             invalidate()
             throw error
@@ -104,6 +113,7 @@ public final class AppTap {
     }
 
     public func invalidate() {
+        sampleRateListener = nil
         if aggregateID != kAudioObjectUnknown {
             if let ioProcID {
                 AudioDeviceStop(aggregateID, ioProcID)

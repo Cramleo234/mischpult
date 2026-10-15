@@ -124,6 +124,34 @@ final class AudioProcessorTests: XCTestCase {
         XCTAssertTrue(output.allSatisfy { abs($0 - 0.2) < 0.000_1 })
     }
 
+    func testUnityGainLeavesLoudSignalsUntouched() {
+        let processor = AudioProcessor(sampleRate: 48_000)
+        let input = [Float](repeating: 0.97, count: 128)
+        let output = run(processor, input: input, frames: 64)
+        XCTAssertTrue(output.allSatisfy { abs($0 - 0.97) < 0.000_1 })
+    }
+
+    func testMonoOutputMixesBothChannels() {
+        let processor = AudioProcessor(sampleRate: 48_000)
+        let input: [Float] = (0..<64).flatMap { _ in [Float(0.4), Float(0.2)] }
+        let output = run(processor, input: input, outputChannels: 1, frames: 64)
+        XCTAssertTrue(output.allSatisfy { abs($0 - 0.3) < 0.000_1 })
+    }
+
+    func testSampleRateChangeKeepsEQWorking() {
+        let processor = AudioProcessor(sampleRate: 48_000)
+        processor.setEQ(EQSettings(bass: 12))
+        processor.updateSampleRate(44_100)
+        XCTAssertEqual(processor.sampleRate, 44_100)
+        let frames = 44_100
+        let input: [Float] = (0..<frames).flatMap { frame -> [Float] in
+            let value = Float(sin(2 * Double.pi * 50 * Double(frame) / 44_100)) * 0.1
+            return [value, value]
+        }
+        let output = run(processor, input: input, frames: frames)
+        XCTAssertGreaterThan(output[frames...].map(abs).max() ?? 0, 0.3)
+    }
+
     func testDefaultSettingsNeedNoTap() {
         var settings = AppSettings()
         XCTAssertFalse(settings.needsTap)
