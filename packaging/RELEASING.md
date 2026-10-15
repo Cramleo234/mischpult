@@ -1,12 +1,14 @@
 # Mischpult veröffentlichen
 
-Gebaut wird ohne Xcode-Fenster als Swift Package. App-Repo und Tap sind privat.
+Gebaut wird ohne Xcode-Fenster als Swift Package. Das App-Repo ist **öffentlich** (DMG frei auf der Release-Seite), der Tap bleibt privat.
+Commits nur als `Cramleo <89691483+Cramleo234@users.noreply.github.com>` (in `.git/config` dieses Repos eingestellt), damit kein echter Name öffentlich wird.
 
 ## Einmalige Einrichtung
 
 1. `gh auth login` und `gh auth setup-git` als **Cramleo234** (macht der Nutzer selbst; keine Tokens in Dateien).
-2. Privates Repo anlegen: `gh repo create Cramleo234/mischpult --private --source . --push`.
-3. Beschreibung setzen: `gh repo edit Cramleo234/mischpult --description "Lautstärke, Ausgabegerät und Equalizer pro App – private SoundSource-Alternative"`.
+2. Repo anlegen (erst privat, seit 1.0.0 öffentlich): `gh repo create Cramleo234/mischpult --private --source . --push`, später `gh repo edit Cramleo234/mischpult --visibility public --accept-visibility-change-consequences`.
+   Anonyme Commit-Adresse: `git config user.name Cramleo` und `git config user.email 89691483+Cramleo234@users.noreply.github.com`.
+3. Beschreibung setzen: `gh repo edit Cramleo234/mischpult --description "Lautstärke, Ausgabegerät und Equalizer pro App – inoffizielle SoundSource-Alternative"`.
 4. Der Tap liegt daneben unter `../homebrew-tap` (`Cramleo234/homebrew-tap`).
 
 ## Erster Release (1.0.0)

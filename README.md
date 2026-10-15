@@ -1,6 +1,6 @@
 # Mischpult
 
-Eine private Menüleisten-App im Stil von SoundSource: Jede App bekommt ihren eigenen Lautstärkeregler, auf Wunsch ihr eigenes Ausgabegerät und einen Equalizer. Auf Deutsch und Englisch.
+Eine kostenlose Menüleisten-App für macOS, inspiriert von SoundSource: Jede App bekommt ihren eigenen Lautstärkeregler, auf Wunsch ihr eigenes Ausgabegerät und einen Equalizer. Auf Deutsch und Englisch.
 
 ## Features
 
@@ -21,42 +21,30 @@ Eine private Menüleisten-App im Stil von SoundSource: Jede App bekommt ihren ei
 
 Mischpult nutzt Apples „Process Taps“, die es erst ab macOS 14.2 gibt.
 
-Das Repo und der Homebrew-Tap sind **privat**. Für den Download braucht dein Mac deinen GitHub-Login.
+### Herunterladen
 
-Einmalig im Terminal einrichten, sofern noch nicht geschehen:
+1. Die neueste `Mischpult-<version>.dmg` von der [Release-Seite](https://github.com/Cramleo234/mischpult/releases/latest) laden.
+2. Die DMG öffnen und **Mischpult** auf **Programme** ziehen.
+3. Mischpult starten. Das Symbol mit den drei Schiebereglern erscheint oben in der Menüleiste.
 
-```bash
-brew install gh
-gh auth login
-gh auth setup-git
-echo 'export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token 2>/dev/null)"' >> ~/.zshrc
-source ~/.zshrc
-```
+> **Warnung beim ersten Start:** Mischpult ist ein kostenloses Hobbyprojekt ohne Apple-Entwicklerkonto. Die App ist deshalb nur ad hoc signiert und **nicht von Apple notarisiert**. macOS meldet beim ersten Öffnen, dass die App nicht überprüft werden kann. So öffnest du sie trotzdem: **Systemeinstellungen → Datenschutz & Sicherheit**, ganz nach unten scrollen und bei Mischpult auf **Trotzdem öffnen** klicken. Unter macOS 14 reicht auch Rechtsklick auf die App → **Öffnen**.
 
-Dann installieren:
+Updates gibt es ebenfalls auf der Release-Seite. Zum Aktualisieren Mischpult beenden und die neue Version über die alte ziehen.
+
+### Homebrew (nur für den Entwickler)
+
+Die Cask liegt in einem privaten Tap und funktioniert nur mit Zugriff darauf:
 
 ```bash
 brew tap Cramleo234/tap
 brew trust Cramleo234/tap
 brew install --cask cramleo234/tap/mischpult
+brew upgrade --cask cramleo234/tap/mischpult   # aktualisieren
 ```
 
 > **Warum `brew trust`?** Ab Homebrew 6 müssen Taps anderer Anbieter freigegeben werden, sonst überspringt Homebrew sie kommentarlos.
 >
-> **Warum das Token?** Die GitHub-API liefert Dateien aus privaten Releases nur mit Anmeldung. Das Token stammt aus deinem `gh`-Login und wird weder in Mischpult noch im Repo gespeichert.
-
-### Aktualisieren
-
-```bash
-brew update
-brew upgrade --cask cramleo234/tap/mischpult
-```
-
-### Manuelle DMG-Installation
-
-Das DMG aus den [privaten Releases](https://github.com/Cramleo234/mischpult/releases) laden, öffnen und **Mischpult** auf **Programme** ziehen.
-
-> Mischpult ist ad hoc signiert und **nicht notarisiert**. Beim ersten Start gegebenenfalls Rechtsklick auf die App → **Öffnen** (oder Freigabe unter Systemeinstellungen → Datenschutz & Sicherheit).
+> **Warum das Token?** Der Tap ist privat. Homebrew braucht dafür `HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"` in der `~/.zshrc`. Das Token stammt aus dem `gh`-Login und wird weder in Mischpult noch im Repo gespeichert.
 
 ### Erlaubnis „Systemaudio“
 
@@ -96,7 +84,7 @@ Für jede App mit veränderten Reglern legt Mischpult einen privaten **Process T
 
 ## Rechtliches
 
-Mischpult ist ein inoffizielles, privates Projekt und steht in keiner Verbindung zu Rogue Amoeba oder SoundSource. Es enthält keinen fremden Code und keine fremden Grafiken; Icon und DMG-Hintergrund sind eigenes Artwork. Nur für den privaten Gebrauch.
+Mischpult ist ein inoffizielles Hobbyprojekt und steht in keiner Verbindung zu Rogue Amoeba oder SoundSource. „SoundSource“ ist eine Marke von Rogue Amoeba und wird hier nur zum Vergleich genannt. Mischpult enthält keinen fremden Code und keine fremden Grafiken; Icon und DMG-Hintergrund sind eigenes Artwork. Die Nutzung erfolgt ohne Gewähr (siehe Lizenz).
 
 Copyright © 2026 Cramleo
 

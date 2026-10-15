@@ -10,7 +10,7 @@ cask "mischpult" do
         "Accept: application/octet-stream",
       ]
   name "Mischpult"
-  desc "Lautstärke, Ausgabegerät und Equalizer pro App – private SoundSource-Alternative"
+  desc "Lautstärke, Ausgabegerät und Equalizer pro App – inoffizielle SoundSource-Alternative"
   homepage "https://github.com/Cramleo234/mischpult"
 
   depends_on macos: :sonoma

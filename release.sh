@@ -40,8 +40,9 @@ for CHECKOUT in "$ROOT" "$TAP"; do
         exit 1
     fi
 done
-if [[ "$(gh repo view "$REPO" --json isPrivate --jq .isPrivate)" != "true" ]]; then
-    printf 'Das vorhandene App-Repo muss privat sein: %s\n' "$REPO" >&2
+# Das Repo ist öffentlich: nie unter dem echten Namen committen.
+if [[ "$(git config user.email)" != *"@users.noreply.github.com" ]]; then
+    printf 'Bitte vorher die anonyme Commit-Adresse setzen (siehe packaging/RELEASING.md).\n' >&2
     exit 1
 fi
 if gh release view "v$VERSION" --repo "$REPO" >/dev/null 2>&1; then
@@ -67,14 +68,12 @@ cat >> "$WORK/notes.md" <<'NOTES'
 
 ## Installation
 
-```bash
-brew update
-brew upgrade --cask cramleo234/tap/mischpult
-```
+`Mischpult-<version>.dmg` unten bei den Dateien laden, öffnen und Mischpult auf
+„Programme“ ziehen (die alte Version vorher beenden). Mischpult ist nicht
+notarisiert: Beim ersten Start unter Systemeinstellungen → Datenschutz &
+Sicherheit auf „Trotzdem öffnen“ klicken. Benötigt macOS 14.2 oder neuer.
 
-Erstinstallation: `brew trust Cramleo234/tap`, anschließend
-`brew install --cask cramleo234/tap/mischpult`. Das private Repo benötigt den
-GitHub-Login und `HOMEBREW_GITHUB_API_TOKEN`; siehe README.
+Mit Zugriff auf den privaten Tap: `brew upgrade --cask cramleo234/tap/mischpult`
 NOTES
 
 /usr/libexec/PlistBuddy -c "Set CFBundleShortVersionString $VERSION" "$ROOT/Support/Info.plist"
