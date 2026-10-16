@@ -92,20 +92,6 @@ extension View {
     }
 }
 
-/// Fasst Glas-Elemente zusammen, damit sie wie eine Fläche ineinanderfließen.
-struct GlassGroup<Content: View>: View {
-    var spacing: CGFloat = 10
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        if #available(macOS 26.0, *) {
-            GlassEffectContainer(spacing: spacing) { content }
-        } else {
-            content
-        }
-    }
-}
-
 /// Dünne Pegelanzeige unter einem Regler.
 struct LevelBar: View {
     let level: Float

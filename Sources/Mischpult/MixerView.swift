@@ -1,3 +1,4 @@
+import CoreAudio
 import MischpultCore
 import SwiftUI
 
@@ -5,40 +6,16 @@ import SwiftUI
 struct MixerView: View {
     @EnvironmentObject private var store: MixerStore
     @AppStorage(GlassSettings.key) private var glassIntensity = GlassSettings.defaultIntensity
-    @State private var showSettings = false
-    /// Zuletzt gemessene Höhe der Regler-Ansicht; die Einstellungen bekommen genau
-    /// diese Höhe, damit sich das Fenster beim Umschalten nicht verändert.
-    @State private var mainHeight: CGFloat = 0
 
+    // Bewusst ohne GlassEffectContainer: darin verschmelzen nahe Kacheln zu einer
+    // einzigen Glasfläche. Und der Inhalt wird nie ausgetauscht (Einstellungen
+    // öffnen sich in einem eigenen Fenster), damit das Fenster nicht verrutscht.
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Header(showSettings: $showSettings)
-            GlassGroup(spacing: 12) {
-                // Immer nur eine Ansicht zeigen: Glasflächen ignorieren Deckkraft-
-                // Änderungen, übereinandergelegte Ebenen wären beide sichtbar.
-                // Die Einstellungen übernehmen die Höhe der Regler-Ansicht (bei Bedarf
-                // scrollbar), damit das Menüleisten-Fenster nicht verrutscht.
-                if showSettings {
-                    ScrollView {
-                        SettingsTile(intensity: $glassIntensity)
-                    }
-                    .scrollIndicators(.automatic)
-                    .frame(height: mainHeight > 0 ? mainHeight : nil)
-                } else {
-                    VStack(spacing: 10) {
-                        if store.permission == .denied { PermissionBanner() }
-                        DeviceTile()
-                        AppsTile()
-                    }
-                    .background {
-                        GeometryReader { proxy in
-                            Color.clear
-                                .onAppear { mainHeight = proxy.size.height }
-                                .onChange(of: proxy.size.height) { _, height in mainHeight = height }
-                        }
-                    }
-                }
-            }
+            Header()
+            if store.permission == .denied { PermissionBanner() }
+            DeviceTile()
+            AppsTile()
             Text("Unveränderte Apps laufen direkt zum Gerät.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
@@ -48,10 +25,7 @@ struct MixerView: View {
         .frame(width: 360)
         .environment(\.glassIntensity, glassIntensity)
         .onAppear { store.setVisible(true) }
-        .onDisappear {
-            store.setVisible(false)
-            showSettings = false
-        }
+        .onDisappear { store.setVisible(false) }
     }
 }
 
@@ -59,7 +33,6 @@ struct MixerView: View {
 
 private struct Header: View {
     @EnvironmentObject private var store: MixerStore
-    @Binding var showSettings: Bool
 
     private var subtitle: String {
         let playing = store.apps.filter(\.isPlaying).count
@@ -87,18 +60,17 @@ private struct Header: View {
             }
             Spacer()
             Button {
-                showSettings.toggle()
+                SettingsWindow.show(store: store)
             } label: {
-                Image(systemName: showSettings ? "xmark" : "gearshape.fill")
+                Image(systemName: "gearshape.fill")
                     .font(.system(size: 13, weight: .semibold))
-                    .contentTransition(.symbolEffect(.replace))
                     .frame(width: 30, height: 30)
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
             .glassCircle(interactive: true)
-            .help(showSettings ? L("Einstellungen schließen") : L("Einstellungen"))
-            .accessibilityLabel(showSettings ? Text("Einstellungen schließen") : Text("Einstellungen"))
+            .help(L("Einstellungen"))
+            .accessibilityLabel(Text("Einstellungen"))
         }
         .padding(.horizontal, 2)
     }
@@ -120,7 +92,6 @@ private struct PermissionBanner: View {
                 .fixedSize(horizontal: false, vertical: true)
             Button("Systemeinstellungen öffnen") { store.openPermissionSettings() }
                 .controlSize(.small)
-                .glassButtonStyle()
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -182,6 +153,9 @@ private struct DeviceTile: View {
     }
 }
 
+/// Gerätesymbol, Überschrift und eine echte Auswahlliste mit dem Gerätenamen.
+/// (Ein `Menu` mit eigenem Etikett zeigt unter macOS nur Text oder Symbol –
+/// der Gerätename fehlte dann.)
 private struct DevicePicker: View {
     let title: LocalizedStringKey
     let device: AudioDevice?
@@ -190,45 +164,32 @@ private struct DevicePicker: View {
     let select: (AudioDevice) -> Void
 
     var body: some View {
-        Menu {
-            ForEach(devices) { candidate in
-                Button {
-                    select(candidate)
-                } label: {
-                    if candidate.id == device?.id {
-                        Label(candidate.name, systemImage: "checkmark")
-                    } else {
-                        Label(candidate.name, systemImage: candidate.symbolName)
+        HStack(spacing: 10) {
+            Image(systemName: device?.symbolName ?? fallbackSymbol)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(Circle().fill(Color.accentColor))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                Picker(title, selection: Binding(get: { device?.id ?? 0 }, set: { id in
+                    if let chosen = devices.first(where: { $0.id == id }) { select(chosen) }
+                })) {
+                    if device == nil { Text("Kein Gerät").tag(AudioObjectID(0)) }
+                    ForEach(devices) { candidate in
+                        Text(candidate.name).tag(candidate.id)
                     }
                 }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .controlSize(.small)
+                .fixedSize()
             }
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: device?.symbolName ?? fallbackSymbol)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 28, height: 28)
-                    .glassCircle(tint: .accentColor)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(title)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                    Text(device?.name ?? L("Kein Gerät"))
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                }
-                Spacer(minLength: 4)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .contentShape(Rectangle())
+            Spacer(minLength: 0)
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .buttonStyle(.plain)
     }
 }
 
@@ -354,7 +315,7 @@ private struct AppRow: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .glassCircle(interactive: true)
+                .background(Circle().fill(Color.primary.opacity(expanded ? 0.16 : 0.08)))
                 .help(L("Ausgabe und Equalizer"))
                 .accessibilityLabel(Text("Ausgabe und Equalizer"))
             }
@@ -425,37 +386,20 @@ private struct AppDetails: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(width: 52, alignment: .leading)
-                Menu {
-                    Button {
-                        store.setOutput(app.id, nil)
-                    } label: {
-                        if app.settings.outputUID == nil {
-                            Label("Systemausgabe", systemImage: "checkmark")
-                        } else {
-                            Text("Systemausgabe")
-                        }
+                Picker("Ausgabe", selection: Binding(get: { app.settings.outputUID ?? "" },
+                                                     set: { store.setOutput(app.id, $0.isEmpty ? nil : $0) })) {
+                    Text("Systemausgabe").tag("")
+                    if let uid = app.settings.outputUID, !store.outputs.contains(where: { $0.uid == uid }) {
+                        Text("Gerät nicht verbunden").tag(uid)
                     }
                     Divider()
                     ForEach(store.outputs) { device in
-                        Button {
-                            store.setOutput(app.id, device.uid)
-                        } label: {
-                            if app.settings.outputUID == device.uid {
-                                Label(device.name, systemImage: "checkmark")
-                            } else {
-                                Label(device.name, systemImage: device.symbolName)
-                            }
-                        }
+                        Text(device.name).tag(device.uid)
                     }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(outputName).lineLimit(1)
-                        Image(systemName: "chevron.up.chevron.down").font(.caption2)
-                    }
-                    .font(.caption.weight(.medium))
                 }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .controlSize(.small)
                 .fixedSize()
                 Spacer()
             }
@@ -470,11 +414,8 @@ private struct AppDetails: View {
             }
             HStack {
                 Spacer()
-                Button("Zurücksetzen") {
-                    withAnimation(.smooth) { store.reset(app.id) }
-                }
-                .controlSize(.small)
-                .glassButtonStyle()
+                Button("Zurücksetzen") { store.reset(app.id) }
+                    .controlSize(.small)
                 .disabled(!app.settings.needsTap)
             }
         }
@@ -482,10 +423,6 @@ private struct AppDetails: View {
         .padding(.trailing, 4)
     }
 
-    private var outputName: String {
-        guard let uid = app.settings.outputUID else { return L("Systemausgabe") }
-        return store.outputs.first { $0.uid == uid }?.name ?? L("Gerät nicht verbunden")
-    }
 }
 
 private struct EQRow: View {
@@ -510,107 +447,6 @@ private struct EQRow: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 40, alignment: .trailing)
         }
-    }
-}
-
-// MARK: Einstellungen
-
-private struct SettingsTile: View {
-    @EnvironmentObject private var store: MixerStore
-    @Binding var intensity: Double
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Einstellungen")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-
-            Toggle("Alle Apps anzeigen", isOn: $store.showAllApps)
-            Toggle("Beim Anmelden starten", isOn: Binding(get: { store.launchAtLogin },
-                                                          set: { store.setLaunchAtLogin($0) }))
-
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("Glas-Intensität")
-                    Spacer()
-                    Text(Double(intensity).formatted(.percent.precision(.fractionLength(0))))
-                        .font(.caption.weight(.medium))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                }
-                Slider(value: $intensity, in: 0...1)
-                    .controlSize(.small)
-                    .accessibilityLabel(Text("Glas-Intensität"))
-                Text("Weniger Intensität macht die Flächen ruhiger und deckender.")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
-
-            Divider().opacity(0.5)
-
-            VStack(spacing: 2) {
-                SettingsLink(title: "Ton-Einstellungen öffnen …", symbol: "speaker.wave.2") {
-                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Sound-Settings.extension")!)
-                }
-                SettingsLink(title: "Erlaubnis Systemaudio …", symbol: "lock.shield") {
-                    store.openPermissionSettings()
-                }
-                SettingsLink(title: "Versionsverlauf …", symbol: "clock.arrow.circlepath") {
-                    ChangelogWindow.show()
-                }
-            }
-
-            HStack {
-                Text(aboutText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Button("Beenden") { NSApp.terminate(nil) }
-                    .keyboardShortcut("q")
-                    .controlSize(.small)
-                    .glassButtonStyle()
-            }
-        }
-        .toggleStyle(.switch)
-        .controlSize(.small)
-        .font(.system(size: 12.5))
-        .padding(12)
-        .glassTile()
-    }
-
-    private var aboutText: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
-        return String(format: L("Mischpult %@ – ein Hobbyprojekt"), version)
-    }
-}
-
-private struct SettingsLink: View {
-    let title: LocalizedStringKey
-    let symbol: String
-    let action: () -> Void
-    @State private var hovering = false
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: symbol)
-                    .frame(width: 18)
-                    .foregroundStyle(.secondary)
-                Text(title)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 5)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.primary.opacity(hovering ? 0.07 : 0)))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering = $0 }
     }
 }
 

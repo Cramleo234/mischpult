@@ -13,8 +13,6 @@ public enum AudioPermission {
     private static let handle = dlopen("/System/Library/PrivateFrameworks/TCC.framework/Versions/A/TCC", RTLD_NOW)
 
     private typealias Preflight = @convention(c) (CFString, CFDictionary?) -> Int
-    // Der Rückruf ist ein Objective-C-Block, keine Swift-Closure.
-    private typealias Request = @convention(c) (CFString, CFDictionary?, @convention(block) (Bool) -> Void) -> Void
 
     public static var status: Status {
         guard let handle, let symbol = dlsym(handle, "TCCAccessPreflight") else { return .unavailable }
@@ -25,20 +23,9 @@ public enum AudioPermission {
         }
     }
 
-    /// Zeigt den Systemdialog (nur beim ersten Mal); Ergebnis auf dem Haupt-Thread.
-    public static func request(_ completion: @escaping (Bool) -> Void) {
-        guard let handle, let symbol = dlsym(handle, "TCCAccessRequest") else {
-            DispatchQueue.main.async { completion(false) }
-            return
-        }
-        let callback: @convention(block) (Bool) -> Void = { granted in
-            DispatchQueue.main.async { completion(granted) }
-        }
-        unsafeBitCast(symbol, to: Request.self)(service, nil, callback)
-    }
-
+    /// „Bildschirm- & Systemaudioaufnahme“ – dort steht auch „Nur Systemaudio“.
     public static let settingsURL = URL(
-        string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AudioCapture")!
+        string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
 }
 
 /// Gespeicherte Regler einer App.

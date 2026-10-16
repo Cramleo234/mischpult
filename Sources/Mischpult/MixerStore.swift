@@ -36,6 +36,7 @@ final class MixerStore: ObservableObject {
         didSet { defaults.set(showAllApps, forKey: "showAllApps"); refreshApps() }
     }
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @Published private(set) var launchAtLoginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
 
     private let defaults = UserDefaults.standard
     private var settings: [String: AppSettings] = [:]
@@ -50,7 +51,6 @@ final class MixerStore: ObservableObject {
     /// App-Symbole einmal laden statt bei jedem Neuzeichnen (20 × pro Sekunde).
     private var icons: [String: NSImage] = [:]
     private var lastTapAttempt: [String: Date] = [:]
-    private var permissionRequestPending = false
 
     init() {
         showAllApps = defaults.bool(forKey: "showAllApps")
@@ -80,7 +80,7 @@ final class MixerStore: ObservableObject {
         isVisible = visible
         if visible {
             checkPermission()
-            launchAtLogin = SMAppService.mainApp.status == .enabled
+            refreshLaunchAtLogin()
             refreshAll()
         }
         scheduleTimer()
@@ -244,17 +244,10 @@ final class MixerStore: ObservableObject {
             }
         }
         if permission != .granted { permission = AudioPermission.status }
-        switch permission {
-        case .denied:
-            // Ohne Erlaubnis bliebe die App nur stumm – dann lieber gar nicht eingreifen.
-            return
-        case .notDetermined:
-            // Erst fragen, dann umleiten – sonst wäre die App während des Dialogs stumm.
-            requestPermission()
-            return
-        case .granted, .unavailable:
-            break
-        }
+        // Nur bei ausdrücklich verweigerter Erlaubnis nicht eingreifen (die App bliebe
+        // sonst stumm). „Noch nicht entschieden“ meldet macOS bei ad-hoc signierten
+        // Apps oft dauerhaft; dann einfach den Tap anlegen – macOS fragt dabei selbst.
+        guard permission != .denied else { return }
         // Nach einem Fehler nicht bei jeder Reglerbewegung neu versuchen.
         if tapErrors[group.id] != nil,
            Date().timeIntervalSince(lastTapAttempt[group.id] ?? .distantPast) < 5 { return }
@@ -333,20 +326,6 @@ final class MixerStore: ObservableObject {
 
     // MARK: Erlaubnis & Optionen
 
-    func requestPermission() {
-        guard !permissionRequestPending else { return }
-        permissionRequestPending = true
-        AudioPermission.request { [weak self] _ in
-            guard let self else { return }
-            self.permissionRequestPending = false
-            self.permission = AudioPermission.status
-            // Taps, die ohne Erlaubnis entstanden sind, neu aufbauen.
-            self.stopAllTaps()
-            self.tapErrors.removeAll()
-            self.refreshApps()
-        }
-    }
-
     /// Wurde die Erlaubnis in den Systemeinstellungen entzogen, alle Umleitungen
     /// abbauen – sonst blieben die betroffenen Apps stumm.
     private func checkPermission() {
@@ -366,9 +345,23 @@ final class MixerStore: ObservableObject {
         do {
             if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {
-            NSSound.beep()
+            // Muss macOS erst zustimmen, gleich die passende Stelle öffnen statt nur zu piepen.
+            if SMAppService.mainApp.status != .requiresApproval { NSSound.beep() }
         }
-        launchAtLogin = SMAppService.mainApp.status == .enabled
+        refreshLaunchAtLogin()
+        if enabled && launchAtLoginNeedsApproval { SMAppService.openSystemSettingsLoginItems() }
+    }
+
+    func refreshLaunchAtLogin() {
+        let status = SMAppService.mainApp.status
+        launchAtLogin = status == .enabled
+        launchAtLoginNeedsApproval = status == .requiresApproval
+    }
+
+    func openSoundSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.Sound-Settings.extension") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     /// Text-Ausgabe für die Prüfung ohne Oberfläche (MISCHPULT_SELFTEST=1).

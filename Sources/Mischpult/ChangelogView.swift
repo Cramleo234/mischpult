@@ -18,6 +18,24 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.3.0", date: "16.10.2026",
+            de: [
+                "Wichtig: Die Lautstärke pro App wirkt wieder. Seit 1.1.0 wartete Mischpult auf eine Erlaubnis-Meldung, die macOS nie schickte.",
+                "Einstellungen öffnen sich jetzt in einem eigenen Fenster (Zahnrad) – das Menüleisten-Fenster verrutscht und überlagert sich nicht mehr.",
+                "Aus- und Eingabe zeigen wieder den Namen des Geräts.",
+                "Glaskacheln verschmelzen nicht mehr zu einer großen Fläche; keine Glasknöpfe mehr auf Glas.",
+                "„Erlaubnis Systemaudio …“ öffnet jetzt die richtige Seite der Systemeinstellungen.",
+                "„Beim Anmelden starten“ führt zur Bestätigung in den Systemeinstellungen, wenn macOS sie verlangt.",
+            ],
+            en: [
+                "Important: per-app volume works again. Since 1.1.0 Mischpult waited for a permission notice that macOS never sent.",
+                "Settings now open in their own window (gear) – the menu bar window no longer shifts or overlaps.",
+                "Output and input show the device name again.",
+                "Glass tiles no longer merge into one large surface; no more glass buttons on glass.",
+                "“System audio permission …” now opens the correct page in System Settings.",
+                "“Open at login” leads to the approval in System Settings when macOS requires it.",
+            ]),
+        ChangelogEntry(
             version: "1.2.3", date: "15.10.2026",
             de: [
                 "Behebt, dass Einstellungen und Regler gleichzeitig übereinander angezeigt wurden.",
@@ -100,26 +118,12 @@ enum Changelog {
     ]
 }
 
-/// Eigenes AppKit-Fenster: Eine SwiftUI-`Window`-Szene würde sich bei einer
-/// reinen Menüleisten-App unter macOS 14 schon beim Start öffnen.
-@MainActor
 enum ChangelogWindow {
-    private static var window: NSWindow?
-
+    @MainActor
     static func show() {
-        if window == nil {
-            let created = NSWindow(contentViewController: NSHostingController(rootView: ChangelogView()))
-            created.title = L("Versionsverlauf")
-            created.styleMask = [.titled, .closable, .fullSizeContentView]
-            created.titlebarAppearsTransparent = true
-            created.titleVisibility = .hidden
-            created.isMovableByWindowBackground = true
-            created.isReleasedWhenClosed = false
-            created.center()
-            window = created
+        AuxWindow.show(id: "changelog", title: L("Versionsverlauf"), transparentTitlebar: true) {
+            ChangelogView()
         }
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
     }
 }
 

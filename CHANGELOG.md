@@ -1,6 +1,16 @@
 # Versionsverlauf
 
-Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf**.
+Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
+
+## 1.3.0 – 16.10.2026
+
+**Audit**
+- **Wichtig:** Die Lautstärke pro App wirkt wieder. Seit 1.1.0 wartete Mischpult vor jedem Eingriff auf die Meldung „Erlaubnis erteilt“, die macOS bei der ad-hoc signierten App nie schickte – die Regler blieben ohne Wirkung. Jetzt greift Mischpult wie in 1.0 ein, und macOS fragt dabei selbst nach der Erlaubnis.
+- Einstellungen öffnen sich in einem eigenen Fenster (Zahnrad). Das Menüleisten-Fenster tauscht seinen Inhalt nicht mehr aus und kann deshalb nicht mehr verrutschen oder Ebenen überlagern.
+- Aus- und Eingabe zeigen wieder den Gerätenamen (echte Auswahlliste statt Menü mit eigenem Etikett).
+- Glaskacheln verschmelzen nicht mehr zu einer großen Fläche (keine Glas-Gruppe mehr); keine Glasknöpfe mehr auf Glaskacheln.
+- „Erlaubnis Systemaudio …“ öffnet die Seite „Bildschirm- & Systemaudioaufnahme“.
+- „Beim Anmelden starten“ öffnet die Anmeldeobjekte, wenn macOS eine Bestätigung verlangt, statt sich kommentarlos auszuschalten.
 
 ## 1.2.3 – 15.10.2026
 

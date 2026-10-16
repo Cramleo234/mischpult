@@ -40,7 +40,12 @@
 "%@: Stummschalten" = "%@: Stummschalten";
 "Lautstärke %@" = "Lautstärke %@";
 "Einstellungen" = "Einstellungen";
-"Einstellungen schließen" = "Einstellungen schließen";
 "Glas-Intensität" = "Glas-Intensität";
 "Weniger Intensität macht die Flächen ruhiger und deckender." = "Weniger Intensität macht die Flächen ruhiger und deckender.";
-"Beenden" = "Beenden";
+"Mischpult – Einstellungen" = "Mischpult – Einstellungen";
+"Allgemein" = "Allgemein";
+"macOS möchte das noch bestätigt haben: Systemeinstellungen → Allgemein → Anmeldeobjekte." = "macOS möchte das noch bestätigt haben: Systemeinstellungen → Allgemein → Anmeldeobjekte.";
+"Darstellung" = "Darstellung";
+"System" = "System";
+"Version" = "Version";
+"Mischpult beenden" = "Mischpult beenden";
