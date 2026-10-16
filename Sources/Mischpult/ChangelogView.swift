@@ -18,6 +18,14 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.4.4", date: "16.10.2026",
+            de: [
+                "Behebt, dass neu startende Apps (z. B. Discord) nicht mehr in der Liste erschienen: Mischpult erkennt jetzt zuverlässig, ob das Fenster offen oder geschlossen ist.",
+            ],
+            en: [
+                "Fixes newly started apps (e.g. Discord) no longer appearing in the list: Mischpult now reliably detects whether its window is open or closed.",
+            ]),
+        ChangelogEntry(
             version: "1.4.3", date: "16.10.2026",
             de: [
                 "Das Fenster verschiebt sich nicht mehr beim Öffnen von Ausgabe und Equalizer: Sie erscheinen jetzt als Sprechblase neben der App.",

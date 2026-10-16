@@ -2,6 +2,10 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.4.4 – 16.10.2026
+
+- Behebt, dass neu startende Apps (z. B. Discord) nicht mehr in der Liste erschienen. Seit 1.4.3 bleibt die Liste bei offenem Fenster fest; das Signal „Fenster geschlossen“ kam beim Menüleisten-Fenster aber nicht zuverlässig, sodass die Liste dauerhaft eingefroren blieb. Jetzt wird die Sichtbarkeit am Fenster selbst beobachtet, und nach spätestens zwei Minuten wird die Liste in jedem Fall wieder aktualisiert.
+
 ## 1.4.3 – 16.10.2026
 
 - Das Fenster verschiebt sich nicht mehr beim Öffnen und Schließen von Ausgabe und Equalizer. Jede Höhenänderung des Menüleisten-Fensters lässt macOS es verrutschen – deshalb erscheinen die Einstellungen einer App jetzt als Sprechblase neben der Zeile.

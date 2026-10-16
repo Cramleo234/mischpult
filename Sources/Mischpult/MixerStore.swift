@@ -52,6 +52,7 @@ final class MixerStore: ObservableObject {
     private var listeners: [CAListener] = []
     private var timer: Timer?
     private var isVisible = false
+    private var visibleSince = Date.distantPast
     /// App-Symbole einmal laden statt bei jedem Neuzeichnen (20 × pro Sekunde).
     private var icons: [String: NSImage] = [:]
     private var lastTapAttempt: [String: Date] = [:]
@@ -111,8 +112,9 @@ final class MixerStore: ObservableObject {
     // MARK: Sichtbarkeit / Takt
 
     func setVisible(_ visible: Bool) {
-        guard !isPreview else { return }
+        guard !isPreview, visible != isVisible else { return }
         isVisible = visible
+        if visible { visibleSince = Date() }
         if visible {
             // Beim Öffnen keine Listen neu aufbauen: Das Fenster ist schon gezeichnet,
             // eine andere Höhe würde es verschieben. Aktuell gehalten wird die Liste,
@@ -244,7 +246,10 @@ final class MixerStore: ObservableObject {
         entries.sort { lhs, rhs in
             lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
         }
-        if isVisible && !force {
+        // Sicherheitsnetz: Bleibt die Meldung „Fenster zu“ aus irgendeinem Grund aus,
+        // darf die Liste trotzdem nicht ewig eingefroren bleiben.
+        let freezeList = isVisible && Date().timeIntervalSince(visibleSince) < 120
+        if freezeList && !force {
             let fresh = Dictionary(entries.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
             apps = apps.map { row in
                 guard var updated = fresh[row.id] else {

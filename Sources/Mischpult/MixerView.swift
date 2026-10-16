@@ -29,8 +29,7 @@ struct MixerView: View {
         .padding(.top, 10)
         .padding(.bottom, 8)
         .frame(width: 340)
-        .onAppear { store.setVisible(true) }
-        .onDisappear { store.setVisible(false) }
+        .background(WindowVisibilityObserver { store.setVisible($0) })
     }
 }
 
