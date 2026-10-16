@@ -36,7 +36,7 @@ final class MixerStore: ObservableObject {
         didSet {
             guard !isPreview else { return }
             defaults.set(showAllApps, forKey: "showAllApps")
-            refreshApps()
+            refreshApps(force: true)
         }
     }
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -114,8 +114,14 @@ final class MixerStore: ObservableObject {
         guard !isPreview else { return }
         isVisible = visible
         if visible {
+            // Beim Öffnen keine Listen neu aufbauen: Das Fenster ist schon gezeichnet,
+            // eine andere Höhe würde es verschieben. Aktuell gehalten wird die Liste,
+            // solange das Fenster zu ist (Zeitgeber und Core-Audio-Meldungen).
             checkPermission()
             refreshLaunchAtLogin()
+            refreshVolumes()
+        } else {
+            expandedApp = nil
             refreshAll()
         }
         scheduleTimer()
@@ -213,7 +219,11 @@ final class MixerStore: ObservableObject {
 
     // MARK: Apps
 
-    func refreshApps() {
+    /// Solange das Fenster offen ist, bleiben die Zeilen fest (nur Werte werden
+    /// aktualisiert): Jede neue oder verschwundene Zeile änderte die Fensterhöhe,
+    /// und macOS verschiebt das Menüleisten-Fenster dabei. Neue Apps erscheinen
+    /// beim nächsten Öffnen. `force` nur nach einer bewussten Nutzeraktion.
+    func refreshApps(force: Bool = false) {
         guard !isPreview else { return }
         let groups = AudioProcesses.groups()
         var entries: [AppEntry] = []
@@ -234,7 +244,20 @@ final class MixerStore: ObservableObject {
         entries.sort { lhs, rhs in
             lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
         }
-        apps = entries
+        if isVisible && !force {
+            let fresh = Dictionary(entries.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            apps = apps.map { row in
+                guard var updated = fresh[row.id] else {
+                    var stopped = row
+                    stopped.isPlaying = false
+                    return stopped
+                }
+                updated.level = row.level
+                return updated
+            }
+        } else {
+            apps = entries
+        }
         icons = icons.filter { key, _ in groups.contains { $0.id == key } }
         syncTaps(groups: groups)
     }

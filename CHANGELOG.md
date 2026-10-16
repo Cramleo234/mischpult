@@ -2,6 +2,12 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.4.3 – 16.10.2026
+
+- Das Fenster verschiebt sich nicht mehr beim Öffnen und Schließen von Ausgabe und Equalizer. Jede Höhenänderung des Menüleisten-Fensters lässt macOS es verrutschen – deshalb erscheinen die Einstellungen einer App jetzt als Sprechblase neben der Zeile.
+- Solange das Fenster offen ist, bleibt die App-Liste fest (nur Werte und Pegel ändern sich); neu startende Apps erscheinen beim nächsten Öffnen.
+- Fehlerhinweise als kleines Symbol neben dem App-Namen statt als eigene Zeile.
+
 ## 1.4.2 – 16.10.2026
 
 **Bedienungsaudit**

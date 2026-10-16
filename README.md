@@ -7,7 +7,7 @@ Ein kostenloses Hobbyprojekt: eine Menüleisten-App für macOS, mit der jede App
 - **Lautstärke pro App:** Jede App, die Ton abspielt, erscheint mit eigenem Regler von 0 bis 200 %. Über 100 % wird verstärkt (Boost), ein weicher Begrenzer verhindert hartes Übersteuern. Bei 100 % rastet der Regler leicht ein.
 - **Stummschalten pro App:** Ein Klick auf das App-Symbol schaltet nur diese App stumm.
 - **Eigenes Ausgabegerät pro App:** Zum Beispiel Musik auf die Lautsprecher, Discord auf die Kopfhörer. Standard ist „Systemausgabe“; die App folgt dann dem Gerät, das in macOS gewählt ist.
-- **Equalizer pro App:** Bässe, Mitten und Höhen jeweils ±12 dB.
+- **Equalizer pro App:** Bässe, Mitten und Höhen jeweils ±12 dB – ein Klick auf den App-Namen öffnet Ausgabe und Equalizer.
 - **Pegelanzeige:** Unter jedem Regler zeigt ein Balken, wie laut die App gerade ist.
 - **Geräte im Griff:** Aus- und Eingabegerät des Systems wechseln, Gesamtlautstärke und Mikrofonpegel regeln, alles im selben Fenster.
 - **Merkt sich alles:** Einstellungen gelten pro App und werden beim nächsten Start der App wieder angewendet.

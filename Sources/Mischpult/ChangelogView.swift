@@ -18,6 +18,18 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.4.3", date: "16.10.2026",
+            de: [
+                "Das Fenster verschiebt sich nicht mehr beim Öffnen von Ausgabe und Equalizer: Sie erscheinen jetzt als Sprechblase neben der App.",
+                "Solange das Fenster offen ist, bleibt die App-Liste fest; neu startende Apps erscheinen beim nächsten Öffnen.",
+                "Fehlerhinweise stehen als kleines Symbol neben dem App-Namen statt in einer eigenen Zeile.",
+            ],
+            en: [
+                "The window no longer shifts when opening output and equalizer: they now appear in a popover next to the app.",
+                "While the window is open, the app list stays fixed; newly started apps appear the next time you open it.",
+                "Error hints show as a small icon next to the app name instead of an extra line.",
+            ]),
+        ChangelogEntry(
             version: "1.4.2", date: "16.10.2026",
             de: [
                 "Die App-Liste hat eine feste, alphabetische Reihenfolge – Zeilen springen nicht mehr weg, wenn eine App anfängt oder aufhört zu spielen.",

@@ -347,20 +347,29 @@ private struct AppRow: View {
                                     ? Text("\(app.name): Ton einschalten") : Text("\(app.name): Stummschalten"))
 
                 VStack(alignment: .leading, spacing: 1) {
-                    // Klick auf die Namenszeile klappt Ausgabe und Equalizer auf.
+                    // Klick auf die Namenszeile öffnet Ausgabe und Equalizer als Sprechblase.
+                    // Bewusst kein Aufklappen: Jede Höhenänderung lässt das Menüleisten-
+                    // Fenster verrutschen.
                     HStack(spacing: 5) {
                         Text(app.name)
                             .font(.system(size: 13))
                             .lineLimit(1)
                         badges
+                        if let error = app.error {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.red)
+                                .help(L("Lautstärke für diese App gerade nicht regelbar.") + "\n" + error)
+                                .accessibilityLabel(Text("Lautstärke für diese App gerade nicht regelbar."))
+                        }
                         Spacer(minLength: 4)
                         Text(app.settings.muted ? L("Stumm") : percent(app.settings.volume))
                             .font(.system(size: 12))
                             .monospacedDigit()
                             .foregroundStyle(boosted ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
-                        Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                        Image(systemName: "chevron.right")
                             .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(expanded ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
                             .frame(width: 12)
                     }
                     .contentShape(Rectangle())
@@ -374,21 +383,16 @@ private struct AppRow: View {
                         .accessibilityLabel(Text("Lautstärke \(app.name)"))
                 }
             }
-            if let error = app.error {
-                Label("Lautstärke für diese App gerade nicht regelbar.", systemImage: "exclamationmark.circle")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.red)
-                    .padding(.leading, 38)
-                    .padding(.top, 4)
-                    .help(error)
-            }
-            if expanded {
-                AppDetails(app: app)
-            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .modifier(HoverHighlight(cornerRadius: 8, selected: expanded))
+        .popover(isPresented: Binding(get: { expanded },
+                                      set: { if !$0, expanded { store.expandedApp = nil } }),
+                 arrowEdge: .leading) {
+            AppDetails(app: app)
+                .environmentObject(store)
+        }
         .padding(.horizontal, 6)
     }
 
@@ -434,8 +438,16 @@ private struct AppDetails: View {
     let app: AppEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Divider().padding(.bottom, 2)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(nsImage: app.icon)
+                    .resizable()
+                    .frame(width: 22, height: 22)
+                Text(app.name)
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(1)
+            }
+            .padding(.bottom, 2)
             HStack(spacing: 8) {
                 Text("Ausgabe")
                     .font(.system(size: 11))
@@ -474,8 +486,8 @@ private struct AppDetails: View {
                     .disabled(!app.settings.needsTap)
             }
         }
-        .padding(.leading, 38)
-        .padding(.top, 8)
+        .padding(14)
+        .frame(width: 290)
     }
 }
 
