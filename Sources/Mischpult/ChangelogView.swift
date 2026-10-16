@@ -18,6 +18,22 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.4.0", date: "16.10.2026",
+            de: [
+                "Neues, ruhiges Design im Stil des Ton-Menüs im Kontrollzentrum: Abschnitte mit kleinen Überschriften und feinen Trennlinien statt eigener Glaskacheln.",
+                "Alle Aus- und Eingabegeräte stehen als Liste da – gewähltes Gerät mit blauem Kreis und Häkchen, Wechsel mit einem Klick.",
+                "Ein Klick auf den App-Namen klappt Ausgabe und Equalizer auf.",
+                "Beim Verstärken über 100 % färben sich Regler und Prozentzahl orange.",
+                "Die Glas-Intensität regelt jetzt, wie stark der Hintergrund durch das ganze Fenster scheint.",
+            ],
+            en: [
+                "New, calm design in the style of Control Center’s Sound menu: sections with small headings and fine dividers instead of custom glass tiles.",
+                "All output and input devices are listed – the selected one has a blue circle and a checkmark, switch with one click.",
+                "Clicking an app’s name expands output and equalizer.",
+                "When boosting above 100 %, slider and percentage turn orange.",
+                "Glass intensity now controls how much the background shows through the whole window.",
+            ]),
+        ChangelogEntry(
             version: "1.3.0", date: "16.10.2026",
             de: [
                 "Wichtig: Die Lautstärke pro App wirkt wieder. Seit 1.1.0 wartete Mischpult auf eine Erlaubnis-Meldung, die macOS nie schickte.",

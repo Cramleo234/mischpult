@@ -13,7 +13,7 @@ Ein kostenloses Hobbyprojekt: eine Menüleisten-App für macOS, mit der jede App
 - **Merkt sich alles:** Einstellungen gelten pro App und werden beim nächsten Start der App wieder angewendet.
 - **Greift nur ein, wenn nötig:** Apps mit unveränderten Reglern laufen ganz normal direkt zum Gerät. Erst wenn du etwas änderst, leitet Mischpult den Ton dieser App um.
 - **Beim Anmelden starten** auf Wunsch, **Alle Apps anzeigen** auch ohne laufenden Ton.
-- **Liquid Glass:** Glas-Kacheln im Stil von macOS; die **Glas-Intensität** ist in den Einstellungen regelbar.
+- **Fügt sich in macOS ein:** Aufbau wie das Ton-Menü im Kontrollzentrum; die **Glas-Intensität** des Fensters ist in den Einstellungen regelbar.
 - **Versionsverlauf** in der App und in [CHANGELOG.md](CHANGELOG.md).
 - **Lokal:** keine Telemetrie, keine Internetverbindung, kein Treiber, keine Systemerweiterung.
 

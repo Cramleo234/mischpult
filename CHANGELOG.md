@@ -2,6 +2,14 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.4.0 – 16.10.2026
+
+**Neues Design**
+- Ruhiger Aufbau im Stil des Ton-Menüs im Kontrollzentrum: Abschnitte „Ausgabe“, „Apps“ und „Eingabe“ mit kleinen Überschriften und feinen Trennlinien. Keine eigenen Glaskacheln mehr – das Menüleisten-Fenster ist selbst schon Glas.
+- Alle Aus- und Eingabegeräte als Liste: gewähltes Gerät mit blauem Kreis und Häkchen, Wechsel mit einem Klick.
+- Apps wie in 1.0: normaler Regler mit Pegelbalken; Klick auf den Namen klappt Ausgabe und Equalizer auf; über 100 % werden Regler und Zahl orange.
+- Die Glas-Intensität regelt jetzt, wie stark der Hintergrund durch das ganze Fenster scheint.
+
 ## 1.3.0 – 16.10.2026
 
 **Audit**

@@ -8,9 +8,7 @@
 "Eingabe" = "Eingabe";
 "Ton einschalten" = "Ton einschalten";
 "Stummschalten" = "Stummschalten";
-"Kein Gerät" = "Kein Gerät";
 "Gerade spielt keine App Ton ab." = "Gerade spielt keine App Ton ab.";
-"Sobald eine App Ton ausgibt, erscheint sie hier." = "Sobald eine App Ton ausgibt, erscheint sie hier.";
 "Equalizer aktiv" = "Equalizer aktiv";
 "Stumm" = "Stumm";
 "Ausgabe und Equalizer" = "Ausgabe und Equalizer";
@@ -24,15 +22,11 @@
 "Beim Anmelden starten" = "Beim Anmelden starten";
 "Ton-Einstellungen öffnen …" = "Ton-Einstellungen öffnen …";
 "Erlaubnis Systemaudio …" = "Erlaubnis Systemaudio …";
-"Keine App spielt Ton" = "Keine App spielt Ton";
-"1 App spielt Ton" = "1 App spielt Ton";
-"%d Apps spielen Ton" = "%d Apps spielen Ton";
 "Gesamtlautstärke" = "Gesamtlautstärke";
 "Mikrofonpegel" = "Mikrofonpegel";
 "Apps" = "Apps";
 "Versionsverlauf …" = "Versionsverlauf …";
 "Versionsverlauf" = "Versionsverlauf";
-"Mischpult %@ – ein Hobbyprojekt" = "Mischpult %@ – ein Hobbyprojekt";
 "Mischpult – ein Hobbyprojekt" = "Mischpult – ein Hobbyprojekt";
 "Version %@" = "Version %@";
 "Aktuell" = "Aktuell";
@@ -49,3 +43,5 @@
 "System" = "System";
 "Version" = "Version";
 "Mischpult beenden" = "Mischpult beenden";
+"Apps · 1 spielt Ton" = "Apps · 1 spielt Ton";
+"Apps · %d spielen Ton" = "Apps · %d spielen Ton";

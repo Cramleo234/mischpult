@@ -8,9 +8,7 @@
 "Eingabe" = "Input";
 "Ton einschalten" = "Unmute";
 "Stummschalten" = "Mute";
-"Kein Gerät" = "No device";
 "Gerade spielt keine App Ton ab." = "No app is playing sound right now.";
-"Sobald eine App Ton ausgibt, erscheint sie hier." = "Apps appear here as soon as they play sound.";
 "Equalizer aktiv" = "Equalizer on";
 "Stumm" = "Muted";
 "Ausgabe und Equalizer" = "Output and equalizer";
@@ -24,15 +22,11 @@
 "Beim Anmelden starten" = "Open at login";
 "Ton-Einstellungen öffnen …" = "Open Sound Settings …";
 "Erlaubnis Systemaudio …" = "System audio permission …";
-"Keine App spielt Ton" = "No app is playing";
-"1 App spielt Ton" = "1 app is playing";
-"%d Apps spielen Ton" = "%d apps are playing";
 "Gesamtlautstärke" = "Main volume";
 "Mikrofonpegel" = "Microphone level";
 "Apps" = "Apps";
 "Versionsverlauf …" = "Version History …";
 "Versionsverlauf" = "Version History";
-"Mischpult %@ – ein Hobbyprojekt" = "Mischpult %@ – a hobby project";
 "Mischpult – ein Hobbyprojekt" = "Mischpult – a hobby project";
 "Version %@" = "Version %@";
 "Aktuell" = "Current";
@@ -49,3 +43,5 @@
 "System" = "System";
 "Version" = "Version";
 "Mischpult beenden" = "Quit Mischpult";
+"Apps · 1 spielt Ton" = "Apps · 1 playing";
+"Apps · %d spielen Ton" = "Apps · %d playing";
