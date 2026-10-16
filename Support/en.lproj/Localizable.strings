@@ -33,15 +33,8 @@
 "%@: Ton einschalten" = "%@: Unmute";
 "%@: Stummschalten" = "%@: Mute";
 "Lautstärke %@" = "Volume %@";
-"Einstellungen" = "Settings";
-"Glas-Intensität" = "Glass intensity";
-"Weniger Intensität macht die Flächen ruhiger und deckender." = "Lower intensity makes surfaces calmer and more opaque.";
-"Mischpult – Einstellungen" = "Mischpult – Settings";
-"Allgemein" = "General";
-"macOS möchte das noch bestätigt haben: Systemeinstellungen → Allgemein → Anmeldeobjekte." = "macOS still needs your approval: System Settings → General → Login Items.";
-"Darstellung" = "Appearance";
-"System" = "System";
-"Version" = "Version";
 "Mischpult beenden" = "Quit Mischpult";
 "Apps · 1 spielt Ton" = "Apps · 1 playing";
 "Apps · %d spielen Ton" = "Apps · %d playing";
+"Mischpult %@ – ein Hobbyprojekt" = "Mischpult %@ – a hobby project";
+"Optionen" = "Options";

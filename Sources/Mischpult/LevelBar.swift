@@ -1,18 +1,4 @@
-import AppKit
 import SwiftUI
-
-/// Glas-Intensität 0 … 1 (Einstellung „Glas-Intensität“).
-///
-/// Das Menüleisten-Fenster ist unter macOS bereits eine Glasfläche. Die Intensität
-/// legt eine Deckschicht darüber: 1 = volles Glas, 0 = ruhige, fast deckende Fläche.
-enum GlassSettings {
-    static let key = "glassIntensity"
-    static let defaultIntensity = 1.0
-
-    static func backdrop(_ intensity: Double) -> Color {
-        Color(nsColor: .windowBackgroundColor).opacity((1 - min(max(intensity, 0), 1)) * 0.92)
-    }
-}
 
 /// Dünne Pegelanzeige unter einem Regler.
 struct LevelBar: View {

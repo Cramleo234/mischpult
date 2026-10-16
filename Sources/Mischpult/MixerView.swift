@@ -5,13 +5,12 @@ import SwiftUI
 // Aufbau wie das Ton-Menü im Kontrollzentrum: Das Menüleisten-Fenster ist selbst
 // schon eine Glasfläche; darauf liegen nur Abschnitte mit kleinen Überschriften
 // und feinen Trennlinien. Keine eigenen Glaskacheln, kein Inhaltstausch (Einstellungen
-// haben ein eigenes Fenster) und keine animierten Höhenänderungen – sonst verrutscht
+// sind ein Aufklappmenü, das als eigenes Popup erscheint) und keine animierten Höhenänderungen – sonst verrutscht
 // das Fenster.
 
 /// Das Fenster unter dem Menüleisten-Symbol.
 struct MixerView: View {
     @EnvironmentObject private var store: MixerStore
-    @AppStorage(GlassSettings.key) private var glassIntensity = GlassSettings.defaultIntensity
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -30,7 +29,6 @@ struct MixerView: View {
         .padding(.top, 10)
         .padding(.bottom, 8)
         .frame(width: 340)
-        .background(GlassSettings.backdrop(glassIntensity))
         .onAppear { store.setVisible(true) }
         .onDisappear { store.setVisible(false) }
     }
@@ -157,21 +155,46 @@ private struct Header: View {
             Text("Mischpult")
                 .font(.system(size: 14, weight: .semibold))
             Spacer()
-            Button {
-                SettingsWindow.show(store: store)
-            } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 24, height: 24)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help(L("Einstellungen"))
-            .accessibilityLabel(Text("Einstellungen"))
+            OptionsMenu()
         }
         .padding(.horizontal, 14)
         .padding(.bottom, 6)
+    }
+}
+
+/// Optionen wie in Version 1.0: ein normales macOS-Aufklappmenü. Es erscheint als
+/// eigenes Popup und verändert das Menüleisten-Fenster nicht.
+private struct OptionsMenu: View {
+    @EnvironmentObject private var store: MixerStore
+
+    var body: some View {
+        Menu {
+            Toggle("Alle Apps anzeigen", isOn: $store.showAllApps)
+            Toggle("Beim Anmelden starten", isOn: Binding(get: { store.launchAtLogin },
+                                                          set: { store.setLaunchAtLogin($0) }))
+            Divider()
+            Button("Ton-Einstellungen öffnen …") { store.openSoundSettings() }
+            Button("Erlaubnis Systemaudio …") { store.openPermissionSettings() }
+            Button("Versionsverlauf …") { ChangelogWindow.show() }
+            Divider()
+            Text(String(format: L("Mischpult %@ – ein Hobbyprojekt"), version))
+            Button("Mischpult beenden") { NSApp.terminate(nil) }
+                .keyboardShortcut("q")
+        } label: {
+            Image(systemName: "gearshape")
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help(L("Optionen"))
+        .accessibilityLabel(Text("Optionen"))
+        .onAppear { store.refreshLaunchAtLogin() }
+    }
+
+    private var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
     }
 }
 

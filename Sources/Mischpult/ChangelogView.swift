@@ -18,6 +18,16 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.4.1", date: "16.10.2026",
+            de: [
+                "Die Optionen sind wieder direkt in der App: Das Zahnrad öffnet ein Aufklappmenü wie in Version 1.0.",
+                "Der Regler „Glas-Intensität“ und das eigene Einstellungsfenster sind entfallen.",
+            ],
+            en: [
+                "Options are back inside the app: the gear opens a drop-down menu like in version 1.0.",
+                "The “Glass intensity” slider and the separate settings window have been removed.",
+            ]),
+        ChangelogEntry(
             version: "1.4.0", date: "16.10.2026",
             de: [
                 "Neues, ruhiges Design im Stil des Ton-Menüs im Kontrollzentrum: Abschnitte mit kleinen Überschriften und feinen Trennlinien statt eigener Glaskacheln.",

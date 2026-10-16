@@ -2,6 +2,11 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.4.1 – 16.10.2026
+
+- Die Optionen sind wieder direkt in der App: Das Zahnrad öffnet ein normales Aufklappmenü wie in Version 1.0 (Alle Apps anzeigen, Beim Anmelden starten, Ton-Einstellungen, Erlaubnis Systemaudio, Versionsverlauf, Beenden).
+- Der Regler „Glas-Intensität“ und das eigene Einstellungsfenster sind entfallen.
+
 ## 1.4.0 – 16.10.2026
 
 **Neues Design**
