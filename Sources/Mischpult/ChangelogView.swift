@@ -18,6 +18,20 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.4.2", date: "16.10.2026",
+            de: [
+                "Die App-Liste hat eine feste, alphabetische Reihenfolge – Zeilen springen nicht mehr weg, wenn eine App anfängt oder aufhört zu spielen.",
+                "Bei vielen Apps ist die letzte sichtbare Zeile angeschnitten und der Scrollbalken sichtbar, damit man erkennt, dass es weitergeht.",
+                "Verständliche Fehlermeldung statt Technik-Text (Details im Tooltip).",
+                "Equalizer zeigt „0 dB“ statt „+0 dB“; Lautstärke-Symbole stehen bündig mit den Gerätekreisen.",
+            ],
+            en: [
+                "The app list keeps a fixed, alphabetical order – rows no longer jump away when an app starts or stops playing.",
+                "With many apps the last visible row is cut off and the scroll bar is shown, so you can tell there is more.",
+                "Plain-language error message instead of technical text (details in the tooltip).",
+                "Equalizer shows “0 dB” instead of “+0 dB”; volume symbols line up with the device circles.",
+            ]),
+        ChangelogEntry(
             version: "1.4.1", date: "16.10.2026",
             de: [
                 "Die Optionen sind wieder direkt in der App: Das Zahnrad öffnet ein Aufklappmenü wie in Version 1.0.",

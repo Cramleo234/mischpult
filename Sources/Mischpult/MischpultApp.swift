@@ -6,6 +6,16 @@ struct MischpultApp: App {
     @StateObject private var store = MixerStore()
 
     init() {
+        if let folder = ProcessInfo.processInfo.environment["MISCHPULT_UIAUDIT"] {
+            // Prüfmodus der Oberfläche: läuft ohne Menüleisten-Symbol und beendet sich selbst.
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    NSApp.setActivationPolicy(.prohibited)
+                    UIAudit.run(into: URL(fileURLWithPath: folder))
+                    exit(0)
+                }
+            }
+        }
         if ProcessInfo.processInfo.environment["MISCHPULT_SELFTEST"] == "1" {
             print(MixerStore.selfTestReport())
             exit(0)

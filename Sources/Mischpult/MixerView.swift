@@ -82,15 +82,15 @@ private struct LevelRow: View {
     let accessibilityLabel: Text
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             Group {
                 if let onSymbolTap {
                     Button(action: onSymbolTap) {
-                        Image(systemName: symbol).frame(width: 20)
+                        Image(systemName: symbol).frame(width: 26)
                     }
                     .buttonStyle(.borderless)
                 } else {
-                    Image(systemName: symbol).frame(width: 20)
+                    Image(systemName: symbol).frame(width: 26)
                 }
             }
             .foregroundStyle(.secondary)
@@ -271,6 +271,7 @@ private struct InputSection: View {
 private struct AppsSection: View {
     @EnvironmentObject private var store: MixerStore
     static let maxRowsWithoutScrolling = 6
+    static let rowHeight: CGFloat = 54
 
     private var title: String {
         let playing = store.apps.filter(\.isPlaying).count
@@ -295,8 +296,11 @@ private struct AppsSection: View {
                 // Ohne Scroll-Ansicht: Sie könnte beim Öffnen auf null schrumpfen.
                 rows
             } else {
+                // Höhe so, dass die nächste Zeile halb angeschnitten ist – so sieht man,
+                // dass gescrollt werden kann.
                 ScrollView { rows }
-                    .frame(height: 360)
+                    .scrollIndicators(.visible)
+                    .frame(height: Self.rowHeight * 6.5)
             }
         }
     }
@@ -371,11 +375,12 @@ private struct AppRow: View {
                 }
             }
             if let error = app.error {
-                Label(error, systemImage: "exclamationmark.circle")
+                Label("Lautstärke für diese App gerade nicht regelbar.", systemImage: "exclamationmark.circle")
                     .font(.system(size: 11))
                     .foregroundStyle(.red)
                     .padding(.leading, 38)
                     .padding(.top, 4)
+                    .help(error)
             }
             if expanded {
                 AppDetails(app: app)
@@ -490,7 +495,7 @@ private struct EQRow: View {
             }), in: Double(EQSettings.range.lowerBound)...Double(EQSettings.range.upperBound))
             .controlSize(.mini)
             .accessibilityLabel(Text(title))
-            Text(String(format: "%+.0f dB", value))
+            Text(value == 0 ? "0 dB" : String(format: "%+.0f dB", value))
                 .font(.system(size: 11))
                 .monospacedDigit()
                 .foregroundStyle(.secondary)

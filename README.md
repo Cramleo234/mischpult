@@ -73,6 +73,12 @@ Prüfung ohne Oberfläche (listet Geräte, Audio-Apps und den Status der Erlaubn
 MISCHPULT_SELFTEST=1 build/Mischpult.app/Contents/MacOS/Mischpult
 ```
 
+Bedienzustände mit Beispieldaten als Bilder (kein Ton, keine Geräte, keine Einstellungen werden angefasst):
+
+```bash
+MISCHPULT_UIAUDIT=/tmp/mischpult-ui build/Mischpult.app/Contents/MacOS/Mischpult -AppleLanguages "(de)"
+```
+
 ### Wie es funktioniert
 
 Für jede App mit veränderten Reglern legt Mischpult einen privaten **Process Tap** an, der den Ton dieser App abgreift und das Original stumm schaltet. Ein privates Aggregat-Gerät spielt den Ton dann – mit neuer Lautstärke und Equalizer – auf dem gewünschten Ausgabegerät wieder ab. Hilfsprozesse (z. B. Browser-Tabs) werden der zuständigen App zugeordnet. Beim Beenden von Mischpult wird alles wieder abgebaut und die Apps klingen wie vorher.

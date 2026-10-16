@@ -2,6 +2,15 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.4.2 – 16.10.2026
+
+**Bedienungsaudit**
+- Feste, alphabetische Reihenfolge der Apps: Vorher sortierten spielende Apps nach oben, und Zeilen sprangen bei offenem Fenster unter dem Mauszeiger weg.
+- Bei mehr als sechs Apps ist die letzte sichtbare Zeile angeschnitten und der Scrollbalken immer sichtbar – man erkennt, dass gescrollt werden kann.
+- Verständliche Fehlermeldung („Lautstärke für diese App gerade nicht regelbar.“), technische Details im Tooltip.
+- Equalizer zeigt „0 dB“ statt „+0 dB“; Lautstärke-Symbole stehen bündig mit den Gerätekreisen.
+- Neuer Prüfmodus `MISCHPULT_UIAUDIT=<ordner>` für die Entwicklung: spielt Bedienzustände mit Beispieldaten durch, ohne Ton anzufassen.
+
 ## 1.4.1 – 16.10.2026
 
 - Die Optionen sind wieder direkt in der App: Das Zahnrad öffnet ein normales Aufklappmenü wie in Version 1.0 (Alle Apps anzeigen, Beim Anmelden starten, Ton-Einstellungen, Erlaubnis Systemaudio, Versionsverlauf, Beenden).

@@ -11,6 +11,16 @@ public struct AudioDevice: Identifiable, Hashable, Sendable {
     public let hasInput: Bool
     public let transportType: UInt32
 
+    public init(id: AudioObjectID, uid: String, name: String, hasOutput: Bool, hasInput: Bool,
+                transportType: UInt32) {
+        self.id = id
+        self.uid = uid
+        self.name = name
+        self.hasOutput = hasOutput
+        self.hasInput = hasInput
+        self.transportType = transportType
+    }
+
     /// SF-Symbol passend zur Geräteart.
     public var symbolName: String {
         let lower = name.lowercased()

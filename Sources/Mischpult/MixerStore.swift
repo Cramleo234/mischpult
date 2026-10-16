@@ -33,7 +33,11 @@ final class MixerStore: ObservableObject {
     @Published private(set) var permission = AudioPermission.status
     @Published var expandedApp: String?
     @Published var showAllApps: Bool {
-        didSet { defaults.set(showAllApps, forKey: "showAllApps"); refreshApps() }
+        didSet {
+            guard !isPreview else { return }
+            defaults.set(showAllApps, forKey: "showAllApps")
+            refreshApps()
+        }
     }
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled
     @Published private(set) var launchAtLoginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
@@ -51,8 +55,38 @@ final class MixerStore: ObservableObject {
     /// App-Symbole einmal laden statt bei jedem Neuzeichnen (20 × pro Sekunde).
     private var icons: [String: NSImage] = [:]
     private var lastTapAttempt: [String: Date] = [:]
+    /// Prüfmodus (MISCHPULT_UIAUDIT): nur Beispieldaten, kein Zugriff auf Ton oder Geräte.
+    let isPreview: Bool
+
+    /// Steuerung mit Beispieldaten für den Prüfmodus.
+    init(preview apps: [AppEntry], outputs: [AudioDevice], inputs: [AudioDevice]) {
+        isPreview = true
+        showAllApps = false
+        self.apps = apps
+        self.outputs = outputs
+        self.inputs = inputs
+        defaultOutputID = outputs.first?.id ?? 0
+        defaultInputID = inputs.first?.id ?? 0
+        masterVolume = 0.56
+        masterHasVolume = true
+        inputVolume = 0.64
+        inputHasVolume = true
+        permission = .granted
+        for app in apps { settings[app.id] = app.settings }
+    }
+
+    /// Nur für den Prüfmodus: Zustand direkt setzen.
+    func previewSet(apps: [AppEntry]? = nil, permission: AudioPermission.Status? = nil) {
+        guard isPreview else { return }
+        if let apps {
+            self.apps = apps
+            for app in apps { settings[app.id] = app.settings }
+        }
+        if let permission { self.permission = permission }
+    }
 
     init() {
+        isPreview = false
         showAllApps = defaults.bool(forKey: "showAllApps")
         if let data = defaults.data(forKey: "appSettings"),
            let stored = try? JSONDecoder().decode([String: AppSettings].self, from: data) {
@@ -77,6 +111,7 @@ final class MixerStore: ObservableObject {
     // MARK: Sichtbarkeit / Takt
 
     func setVisible(_ visible: Bool) {
+        guard !isPreview else { return }
         isVisible = visible
         if visible {
             checkPermission()
@@ -110,6 +145,7 @@ final class MixerStore: ObservableObject {
     // MARK: Geräte
 
     func refreshAll() {
+        guard !isPreview else { return }
         refreshDevices()
         refreshApps()
     }
@@ -145,34 +181,40 @@ final class MixerStore: ObservableObject {
     var defaultInput: AudioDevice? { inputs.first { $0.id == defaultInputID } }
 
     func selectOutput(_ device: AudioDevice) {
+        if isPreview { defaultOutputID = device.id; return }
         AudioDevices.setDefaultDevice(device.id)
         refreshAll()
     }
 
     func selectInput(_ device: AudioDevice) {
+        if isPreview { defaultInputID = device.id; return }
         AudioDevices.setDefaultDevice(device.id, input: true)
         refreshAll()
     }
 
     func setMasterVolume(_ value: Float) {
         masterVolume = value
+        guard !isPreview else { return }
         AudioDevices.setVolume(defaultOutputID, value)
         if masterMuted && value > 0 { toggleMasterMute() }
     }
 
     func toggleMasterMute() {
+        if isPreview { masterMuted.toggle(); return }
         AudioDevices.setMuted(defaultOutputID, !masterMuted)
         masterMuted = AudioDevices.isMuted(defaultOutputID)
     }
 
     func setInputVolume(_ value: Float) {
         inputVolume = value
+        guard !isPreview else { return }
         AudioDevices.setVolume(defaultInputID, value, input: true)
     }
 
     // MARK: Apps
 
     func refreshApps() {
+        guard !isPreview else { return }
         let groups = AudioProcesses.groups()
         var entries: [AppEntry] = []
         for group in groups {
@@ -187,9 +229,10 @@ final class MixerStore: ObservableObject {
                                     level: apps.first { $0.id == group.id }?.level ?? 0,
                                     error: tapErrors[group.id]))
         }
+        // Feste, alphabetische Reihenfolge: Würde nach „spielt gerade“ sortiert, sprängen
+        // Zeilen unter dem Mauszeiger weg, sobald eine App anfängt oder aufhört zu spielen.
         entries.sort { lhs, rhs in
-            if lhs.isPlaying != rhs.isPlaying { return lhs.isPlaying }
-            return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
         }
         apps = entries
         icons = icons.filter { key, _ in groups.contains { $0.id == key } }
@@ -294,6 +337,7 @@ final class MixerStore: ObservableObject {
         settings[id] = value
         lastChange[id] = Date()
         updateEntry(id) { $0.settings = value }
+        guard !isPreview else { return }
         persist()
 
         if oldOutput != value.outputUID { removeTap(id) }
