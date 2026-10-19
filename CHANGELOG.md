@@ -2,6 +2,14 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.6.1 – 19.10.2026
+
+**Stromverbrauch**
+- Behebt den sehr hohen Stromverbrauch seit 1.5.0 (gemessen: etwa 26 % Dauerlast, jetzt etwa 0,3 %). Ursache war eine Rückkopplung: Das Lesen der Mitteilungs-Lautstärke startet einen kleinen Hilfsprozess, der sich bei Core Audio anmeldet – das löste die Meldung „Audio-Prozesse geändert“ aus, worauf Mischpult erneut las. Die Mitteilungs-Lautstärke wird jetzt nur beim Start und beim Öffnen des Fensters gelesen.
+- Core-Audio-Meldungen werden gebündelt (höchstens ein Neuaufbau pro halbe Sekunde); Prozess-Änderungen aktualisieren nur die App-Liste.
+- PID, Bundle-ID und App-Zuordnung eines Prozesses werden gemerkt statt bei jeder Prüfung neu ermittelt.
+- Bei geschlossenem Fenster wird nur alle 5 s nachgesehen; bei offenem Fenster läuft die schnelle Pegelanzeige nur, wenn eine App umgeleitet wird.
+
 ## 1.6.0 – 19.10.2026
 
 **Bluetooth-Kopfhörer bleiben in Musikqualität**

@@ -41,13 +41,57 @@ public struct AudioAppGroup: Identifiable, Sendable {
 public enum AudioProcesses {
     private static let system = AudioObjectID(kAudioObjectSystemObject)
 
+    // Stromsparen: PID, Bundle-ID und App-Zuordnung eines Prozesses ändern sich nicht.
+    // Einmal ermittelt, werden sie gemerkt statt bei jeder Prüfung neu abgefragt.
+    private static let cacheLock = NSLock()
+    private static var identityCache: [AudioObjectID: (pid: pid_t, bundleID: String?)] = [:]
+    private static var ownerCache: [pid_t: (owner: Owner, time: Date)] = [:]
+
+    private static func identity(of id: AudioObjectID) -> (pid: pid_t, bundleID: String?)? {
+        cacheLock.lock()
+        let cached = identityCache[id]
+        cacheLock.unlock()
+        if let cached { return cached }
+        guard let pid = try? CAProperty.value(id, CAProperty.address(kAudioProcessPropertyPID),
+                                              default: pid_t(-1)), pid > 0 else { return nil }
+        let bundle = CAProperty.string(id, CAProperty.address(kAudioProcessPropertyBundleID))
+        let value = (pid: pid, bundleID: bundle?.isEmpty == false ? bundle : nil)
+        cacheLock.lock()
+        identityCache[id] = value
+        cacheLock.unlock()
+        return value
+    }
+
+    private static func owner(of process: AudioProcess) -> Owner {
+        cacheLock.lock()
+        let cached = ownerCache[process.pid]
+        cacheLock.unlock()
+        // Hintergrund-Zuordnungen nach einer Weile neu prüfen: Kurz nach dem Start
+        // einer App ist sie bei macOS evtl. noch nicht als App angemeldet.
+        if let cached, cached.owner.isRegular || Date().timeIntervalSince(cached.time) < 30 {
+            return cached.owner
+        }
+        let owner = Owner.resolve(process)
+        cacheLock.lock()
+        ownerCache[process.pid] = (owner, Date())
+        cacheLock.unlock()
+        return owner
+    }
+
     public static func list() -> [AudioProcess] {
         let ids = (try? CAProperty.array(system, CAProperty.address(kAudioHardwarePropertyProcessObjectList),
                                          of: AudioObjectID.self, filler: 0)) ?? []
+        // Gemerkte Daten verschwundener Prozesse vergessen.
+        cacheLock.lock()
+        let alive = Set(ids)
+        identityCache = identityCache.filter { alive.contains($0.key) }
+        let alivePIDs = Set(identityCache.values.map(\.pid))
+        ownerCache = ownerCache.filter { alivePIDs.contains($0.key) }
+        cacheLock.unlock()
         return ids.compactMap { id in
-            guard let pid = try? CAProperty.value(id, CAProperty.address(kAudioProcessPropertyPID),
-                                                  default: pid_t(-1)), pid > 0 else { return nil }
-            let bundle = CAProperty.string(id, CAProperty.address(kAudioProcessPropertyBundleID))
+            guard let identity = identity(of: id) else { return nil }
+            let pid = identity.pid
+            let bundle = identity.bundleID
             let running = (try? CAProperty.value(id, CAProperty.address(kAudioProcessPropertyIsRunningOutput),
                                                  default: UInt32(0))) ?? 0
             let recording = (try? CAProperty.value(id, CAProperty.address(kAudioProcessPropertyIsRunningInput),
@@ -57,7 +101,7 @@ public enum AudioProcesses {
                                                                 scope: kAudioObjectPropertyScopeInput),
                                          of: AudioObjectID.self, filler: 0)) ?? []
                 : []
-            return AudioProcess(objectID: id, pid: pid, bundleID: bundle?.isEmpty == false ? bundle : nil,
+            return AudioProcess(objectID: id, pid: pid, bundleID: bundle,
                                 isRunningOutput: running != 0, isRunningInput: recording != 0,
                                 inputDeviceIDs: inputDevices)
         }
@@ -67,7 +111,7 @@ public enum AudioProcesses {
     public static func groups(excluding ownPID: pid_t = getpid()) -> [AudioAppGroup] {
         var buckets: [String: (owner: Owner, processes: [AudioProcess])] = [:]
         for process in list() where process.pid != ownPID {
-            let owner = Owner.resolve(process)
+            let owner = owner(of: process)
             if owner.pid == ownPID { continue }
             buckets[owner.key, default: (owner, [])].processes.append(process)
         }

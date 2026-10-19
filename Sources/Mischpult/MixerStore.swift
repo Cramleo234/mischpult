@@ -114,10 +114,16 @@ final class MixerStore: ObservableObject {
             settings = stored
         }
         let system = AudioObjectID(kAudioObjectSystemObject)
-        for selector in [kAudioHardwarePropertyProcessObjectList, kAudioHardwarePropertyDevices,
-                         kAudioHardwarePropertyDefaultOutputDevice, kAudioHardwarePropertyDefaultInputDevice] {
+        // Meldungen kommen oft in Schüben; mehrere kurz hintereinander lösen nur einen
+        // einzigen Neuaufbau aus. Prozess-Änderungen betreffen nur die App-Liste.
+        if let listener = CAListener(object: system, address: CAProperty.address(kAudioHardwarePropertyProcessObjectList),
+                                     handler: { [weak self] in self?.scheduleRefresh(devices: false) }) {
+            listeners.append(listener)
+        }
+        for selector in [kAudioHardwarePropertyDevices, kAudioHardwarePropertyDefaultOutputDevice,
+                         kAudioHardwarePropertyDefaultInputDevice] {
             if let listener = CAListener(object: system, address: CAProperty.address(selector),
-                                         handler: { [weak self] in self?.refreshAll() }) {
+                                         handler: { [weak self] in self?.scheduleRefresh(devices: true) }) {
                 listeners.append(listener)
             }
         }
@@ -127,7 +133,26 @@ final class MixerStore: ObservableObject {
         }
         CallModeNotifier.shared.setUp(store: self)
         refreshAll()
+        refreshAlertVolume()
         scheduleTimer()
+    }
+
+    private var pendingRefresh: (devices: Bool, scheduled: Bool) = (false, false)
+
+    /// Bündelt Core-Audio-Meldungen: höchstens ein Neuaufbau pro halbe Sekunde.
+    private func scheduleRefresh(devices: Bool) {
+        pendingRefresh.devices = pendingRefresh.devices || devices
+        guard !pendingRefresh.scheduled else { return }
+        pendingRefresh.scheduled = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let withDevices = self.pendingRefresh.devices
+                self.pendingRefresh = (false, false)
+                if withDevices { self.refreshDevices() }
+                self.refreshApps()
+            }
+        }
     }
 
     // MARK: Sichtbarkeit / Takt
@@ -143,6 +168,7 @@ final class MixerStore: ObservableObject {
             checkPermission()
             refreshLaunchAtLogin()
             refreshVolumes()
+            refreshAlertVolume()
         } else {
             expandedApp = nil
             refreshAll()
@@ -152,23 +178,30 @@ final class MixerStore: ObservableObject {
 
     private func scheduleTimer() {
         timer?.invalidate()
-        // Offen: flüssige Pegelanzeige. Geschlossen: nur gelegentlich nach neuen Apps sehen.
-        let interval: TimeInterval = isVisible ? 1.0 / 20 : 3
+        // Stromsparend: Geschlossen nur alle 5 s nachsehen (neue Apps melden sich
+        // ohnehin per Core-Audio-Meldung). Offen 20 × pro Sekunde nur, wenn eine
+        // umgeleitete App einen Pegel liefert – sonst einmal pro Sekunde.
+        let fast = isVisible && !taps.isEmpty
+        let interval: TimeInterval = isVisible ? (fast ? 1.0 / 20 : 1) : 5
+        let ticksPerSecond = Int((1 / interval).rounded())
         var ticks = 0
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
                 ticks += 1
                 if self.isVisible {
-                    self.updateLevels()
-                    if ticks % 10 == 0 { self.refreshApps(); self.refreshVolumes() }
-                    if ticks % 40 == 0 { self.checkPermission() }
+                    if fast { self.updateLevels() }
+                    if ticks % max(ticksPerSecond, 1) == 0 { self.refreshApps(); self.refreshVolumes() }
+                    if ticks % (20 * max(ticksPerSecond, 1)) == 0 { self.checkPermission() }
+                    // Taps kamen hinzu oder fielen weg: Takt anpassen.
+                    if fast != !self.taps.isEmpty { self.scheduleTimer() }
                 } else {
                     self.refreshApps()
-                    if ticks % 5 == 0 { self.checkPermission() }
+                    if ticks % 6 == 0 { self.checkPermission() }
                 }
             }
         }
+        timer?.tolerance = interval * 0.2
     }
 
     // MARK: Geräte
@@ -205,7 +238,13 @@ final class MixerStore: ObservableObject {
         let input = AudioDevices.volume(defaultInputID, input: true)
         inputHasVolume = input != nil
         inputVolume = input ?? 1
-        // Im Hintergrund lesen; einen gerade gezogenen Wert nicht überschreiben.
+    }
+
+    /// Mitteilungs-Lautstärke lesen. Nur beim Start und beim Öffnen des Fensters:
+    /// Jeder Lesevorgang startet einen kleinen Hilfsprozess, und der meldet sich bei
+    /// Core Audio an – würde das bei jeder Prozess-Meldung passieren, entstünde eine
+    /// Endlosschleife (so geschehen in 1.5.0–1.6.0, ca. 25 % Dauerlast).
+    private func refreshAlertVolume() {
         AlertVolume.get { [weak self] value in
             MainActor.assumeIsolated {
                 guard let self, Date().timeIntervalSince(self.lastAlertChange) > 1.5 else { return }

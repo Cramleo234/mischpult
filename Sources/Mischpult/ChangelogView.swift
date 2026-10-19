@@ -18,6 +18,18 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.6.1", date: "19.10.2026",
+            de: [
+                "Behebt den sehr hohen Stromverbrauch seit 1.5.0: Mischpult braucht jetzt rund 0,3 % statt etwa 25 % Rechenleistung.",
+                "Ursache war eine Endlosschleife beim Lesen der Mitteilungs-Lautstärke; sie wird jetzt nur noch beim Start und beim Öffnen des Fensters gelesen.",
+                "Weniger Hintergrundarbeit: Meldungen von macOS werden gebündelt, App-Zuordnungen gemerkt, und die Pegelanzeige läuft nur, wenn sie gebraucht wird.",
+            ],
+            en: [
+                "Fixes the very high power usage since 1.5.0: Mischpult now uses about 0.3 % instead of roughly 25 % CPU.",
+                "The cause was an endless loop when reading the notification volume; it is now only read at launch and when opening the window.",
+                "Less background work: macOS notifications are batched, app assignments are cached, and the level meter only runs when needed.",
+            ]),
+        ChangelogEntry(
             version: "1.6.0", date: "19.10.2026",
             de: [
                 "Neu: „Bluetooth-Kopfhörer in Musikqualität halten“ (Zahnrad-Menü, standardmäßig an): Wird ein Kopfhörer-Mikrofon zum Standard-Eingang, schaltet Mischpult auf das eingebaute Mikrofon zurück – die Kopfhörer springen nicht in den Telefon-Modus.",
