@@ -39,3 +39,6 @@
 "Mischpult %@ – ein Hobbyprojekt" = "Mischpult %@ – a hobby project";
 "Optionen" = "Options";
 "Lautstärke für diese App gerade nicht regelbar." = "This app’s volume can’t be controlled right now.";
+"Mitteilungstöne einschalten" = "Unmute notification sounds";
+"Mitteilungstöne stummschalten" = "Mute notification sounds";
+"Lautstärke der Mitteilungstöne" = "Notification sound volume";

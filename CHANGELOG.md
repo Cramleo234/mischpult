@@ -2,6 +2,12 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.5.0 – 19.10.2026
+
+- **Neu: Lautstärke der Mitteilungstöne.** Unter der Gesamtlautstärke gibt es einen eigenen Regler mit Glocke für Hinweis- und Mitteilungstöne, unabhängig von der Gesamtlautstärke ([Issue #1](https://github.com/Cramleo234/mischpult/issues/1)). Ein Klick auf die Glocke schaltet sie stumm und stellt danach den vorherigen Wert wieder her. Die Mitteilungen selbst erscheinen weiterhin; ganz abschalten lassen sie sich unter macOS über „Nicht stören“ bzw. Fokus.
+- Der Wert wird über den offiziellen AppleScript-Befehl `volume settings` in einem Hintergrundprozess gelesen und gesetzt (im eigenen Prozess hätte er SwiftUI zum Absturz bringen können).
+- Behebt einen möglichen Absturz: Die Sichtbarkeit des Fensters wird erst nach dem laufenden Zeichenvorgang gemeldet.
+
 ## 1.4.4 – 16.10.2026
 
 - Behebt, dass neu startende Apps (z. B. Discord) nicht mehr in der Liste erschienen. Seit 1.4.3 bleibt die Liste bei offenem Fenster fest; das Signal „Fenster geschlossen“ kam beim Menüleisten-Fenster aber nicht zuverlässig, sodass die Liste dauerhaft eingefroren blieb. Jetzt wird die Sichtbarkeit am Fenster selbst beobachtet, und nach spätestens zwei Minuten wird die Liste in jedem Fall wieder aktualisiert.

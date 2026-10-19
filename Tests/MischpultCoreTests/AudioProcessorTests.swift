@@ -152,6 +152,14 @@ final class AudioProcessorTests: XCTestCase {
         XCTAssertGreaterThan(output[frames...].map(abs).max() ?? 0, 0.3)
     }
 
+    func testAlertVolumeConversion() {
+        XCTAssertEqual(AlertVolume.scriptValue(0.3), 30)
+        XCTAssertEqual(AlertVolume.scriptValue(-1), 0)
+        XCTAssertEqual(AlertVolume.scriptValue(2), 100)
+        XCTAssertEqual(AlertVolume.fraction(fromScript: 45), 0.45, accuracy: 0.0001)
+        XCTAssertEqual(AlertVolume.fraction(fromScript: 140), 1)
+    }
+
     func testDefaultSettingsNeedNoTap() {
         var settings = AppSettings()
         XCTAssertFalse(settings.needsTap)

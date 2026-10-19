@@ -234,6 +234,17 @@ private struct OutputSection: View {
                      onSymbolTap: { store.toggleMasterMute() },
                      onChange: { store.setMasterVolume($0) },
                      accessibilityLabel: Text("Gesamtlautstärke"))
+            if let alert = store.alertVolume {
+                // Mitteilungs- und Hinweistöne, unabhängig von der Gesamtlautstärke.
+                LevelRow(symbol: alert < 0.001 ? "bell.slash" : "bell",
+                         value: alert,
+                         symbolHelp: alert < 0.001 ? L("Mitteilungstöne einschalten")
+                                                   : L("Mitteilungstöne stummschalten"),
+                         onSymbolTap: { store.toggleAlertMute() },
+                         onChange: { store.setAlertVolume($0) },
+                         accessibilityLabel: Text("Lautstärke der Mitteilungstöne"))
+                    .help(L("Lautstärke der Mitteilungstöne"))
+            }
             ForEach(store.outputs) { device in
                 DeviceRow(device: device, selected: device.id == store.defaultOutputID) {
                     store.selectOutput(device)

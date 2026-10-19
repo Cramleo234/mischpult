@@ -18,6 +18,18 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.5.0", date: "19.10.2026",
+            de: [
+                "Neu: Lautstärke der Mitteilungstöne – eigener Regler mit Glocke unter der Gesamtlautstärke, unabhängig von ihr (Wunsch aus Issue #1).",
+                "Ein Klick auf die Glocke schaltet Mitteilungstöne stumm und stellt den vorherigen Wert wieder her.",
+                "Behebt einen möglichen Absturz beim Erkennen, ob das Fenster sichtbar ist.",
+            ],
+            en: [
+                "New: notification sound volume – its own slider with a bell below the main volume, independent of it (requested in issue #1).",
+                "Clicking the bell mutes notification sounds and restores the previous value.",
+                "Fixes a possible crash when detecting whether the window is visible.",
+            ]),
+        ChangelogEntry(
             version: "1.4.4", date: "16.10.2026",
             de: [
                 "Behebt, dass neu startende Apps (z. B. Discord) nicht mehr in der Liste erschienen: Mischpult erkennt jetzt zuverlässig, ob das Fenster offen oder geschlossen ist.",

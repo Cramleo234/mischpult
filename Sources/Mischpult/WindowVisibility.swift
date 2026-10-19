@@ -50,7 +50,9 @@ struct WindowVisibilityObserver: NSViewRepresentable {
         private func report(_ visible: Bool) {
             guard visible != lastReported else { return }
             lastReported = visible
-            onChange?(visible)
+            // Erst nach dem laufenden Zeichen-/Layoutvorgang melden: Zustandsänderungen
+            // mitten in einem SwiftUI-Update brechen das Programm hart ab.
+            DispatchQueue.main.async { [weak self] in self?.onChange?(visible) }
         }
 
         deinit {

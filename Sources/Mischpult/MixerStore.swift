@@ -29,6 +29,8 @@ final class MixerStore: ObservableObject {
     @Published private(set) var masterHasVolume = false
     @Published private(set) var masterMuted = false
     @Published var inputVolume: Float = 0
+    /// Lautstärke der Mitteilungs- und Hinweistöne (0 … 1); nil = nicht lesbar.
+    @Published private(set) var alertVolume: Float?
     @Published private(set) var inputHasVolume = false
     @Published private(set) var permission = AudioPermission.status
     @Published var expandedApp: String?
@@ -72,6 +74,7 @@ final class MixerStore: ObservableObject {
         masterHasVolume = true
         inputVolume = 0.64
         inputHasVolume = true
+        alertVolume = 0.3
         permission = .granted
         for app in apps { settings[app.id] = app.settings }
     }
@@ -183,6 +186,38 @@ final class MixerStore: ObservableObject {
         let input = AudioDevices.volume(defaultInputID, input: true)
         inputHasVolume = input != nil
         inputVolume = input ?? 1
+        // Im Hintergrund lesen; einen gerade gezogenen Wert nicht überschreiben.
+        AlertVolume.get { [weak self] value in
+            MainActor.assumeIsolated {
+                guard let self, Date().timeIntervalSince(self.lastAlertChange) > 1.5 else { return }
+                self.alertVolume = value
+            }
+        }
+    }
+
+    // MARK: Mitteilungstöne
+
+    private static let alertVolumeBeforeMuteKey = "alertVolumeBeforeMute"
+    private var lastAlertChange = Date.distantPast
+
+    func setAlertVolume(_ value: Float) {
+        let changed = AlertVolume.scriptValue(value) != AlertVolume.scriptValue(alertVolume ?? -1)
+        alertVolume = value
+        lastAlertChange = Date()
+        // Beim Ziehen nur dann an macOS schicken, wenn sich der ganze Prozentwert ändert.
+        if changed && !isPreview { AlertVolume.set(value) }
+    }
+
+    /// Stumm schalten merkt sich den vorherigen Wert; erneutes Klicken stellt ihn wieder her.
+    func toggleAlertMute() {
+        guard let current = alertVolume else { return }
+        if current > 0.001 {
+            defaults.set(current, forKey: Self.alertVolumeBeforeMuteKey)
+            setAlertVolume(0)
+        } else {
+            let previous = defaults.object(forKey: Self.alertVolumeBeforeMuteKey) as? Float ?? 0.5
+            setAlertVolume(previous > 0.001 ? previous : 0.5)
+        }
     }
 
     var defaultOutput: AudioDevice? { outputs.first { $0.id == defaultOutputID } }
@@ -442,6 +477,7 @@ final class MixerStore: ObservableObject {
         lines.append("Ausgabegeräte: " + AudioDevices.outputs().map(\.name).joined(separator: ", "))
         lines.append("Eingabegeräte: " + AudioDevices.inputs().map(\.name).joined(separator: ", "))
         lines.append("Erlaubnis Systemaudio: \(AudioPermission.status)")
+        lines.append("Mitteilungstöne: " + (AlertVolume.readNow().map { "\(AlertVolume.scriptValue($0)) %" } ?? "nicht lesbar"))
         for group in AudioProcesses.groups().sorted(by: { $0.name < $1.name }) {
             lines.append("App: \(group.name) [\(group.id)] Prozesse=\(group.processes.count)"
                          + (group.isPlaying ? " spielt" : "") + (group.isRegularApp ? "" : " (Hintergrund)"))
