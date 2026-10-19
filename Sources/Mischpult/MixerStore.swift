@@ -178,11 +178,13 @@ final class MixerStore: ObservableObject {
 
     private func scheduleTimer() {
         timer?.invalidate()
-        // Stromsparend: Geschlossen nur alle 5 s nachsehen (neue Apps melden sich
-        // ohnehin per Core-Audio-Meldung). Offen 20 × pro Sekunde nur, wenn eine
-        // umgeleitete App einen Pegel liefert – sonst einmal pro Sekunde.
-        let fast = isVisible && !taps.isEmpty
-        let interval: TimeInterval = isVisible ? (fast ? 1.0 / 20 : 1) : 5
+        // Stromsparend: Geschlossen wird nicht mehr regelmäßig nachgesehen – macOS
+        // meldet Start/Stopp von Ton und Mikrofon pro Prozess. Nur pausierte
+        // Umleitungen werden alle 3 s kurz geprüft (Sicherheitsnetz), sonst nur alle
+        // 60 s. Offen 20 × pro Sekunde nur, wenn eine umgeleitete App läuft.
+        let fast = isVisible && taps.values.contains { !$0.isPaused }
+        let anyPaused = taps.values.contains(where: \.isPaused)
+        let interval: TimeInterval = isVisible ? (fast ? 1.0 / 20 : 1) : (anyPaused ? 3 : 60)
         let ticksPerSecond = Int((1 / interval).rounded())
         var ticks = 0
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
@@ -193,11 +195,14 @@ final class MixerStore: ObservableObject {
                     if fast { self.updateLevels() }
                     if ticks % max(ticksPerSecond, 1) == 0 { self.refreshApps(); self.refreshVolumes() }
                     if ticks % (20 * max(ticksPerSecond, 1)) == 0 { self.checkPermission() }
-                    // Taps kamen hinzu oder fielen weg: Takt anpassen.
-                    if fast != !self.taps.isEmpty { self.scheduleTimer() }
+                    // Taps kamen hinzu, fielen weg oder pausieren: Takt anpassen.
+                    if fast != self.taps.values.contains(where: { !$0.isPaused }) { self.scheduleTimer() }
+                } else if anyPaused {
+                    self.updatePauses()
                 } else {
+                    // Sicherheitsnetz, falls eine Meldung von macOS ausbleibt.
                     self.refreshApps()
-                    if ticks % 6 == 0 { self.checkPermission() }
+                    self.checkPermission()
                 }
             }
         }
@@ -431,6 +436,69 @@ final class MixerStore: ObservableObject {
             guard let current = settings[group.id], current.needsTap else { continue }
             ensureTap(for: group, settings: current)
         }
+        syncProcessListeners(groups)
+        updatePauses()
+    }
+
+    // MARK: Meldungen pro Prozess & Pausen
+
+    /// Zeit ohne Ton, nach der eine Umleitung pausiert (kurze Pausen zwischen
+    /// Liedern sollen sie nicht ständig an- und ausschalten).
+    private static let pauseDelay: TimeInterval = 3
+    private var processListeners: [AudioObjectID: [CAListener]] = [:]
+    private var lastPlaying: [String: Date] = [:]
+
+    /// Pro Audio-Prozess melden lassen, wenn er Ton oder Mikrofon startet/stoppt –
+    /// statt alle paar Sekunden alle Prozesse abzufragen.
+    private func syncProcessListeners(_ groups: [AudioAppGroup]) {
+        let ids = Set(groups.flatMap { $0.processes.map(\.objectID) })
+        for id in processListeners.keys where !ids.contains(id) { processListeners[id] = nil }
+        for id in ids where processListeners[id] == nil {
+            processListeners[id] = [kAudioProcessPropertyIsRunningOutput, kAudioProcessPropertyIsRunningInput]
+                .compactMap { selector in
+                    CAListener(object: id, address: CAProperty.address(selector)) { [weak self] in
+                        self?.processActivityChanged(id)
+                    }
+                }
+        }
+    }
+
+    private func processActivityChanged(_ id: AudioObjectID) {
+        // Spielt eine pausierte, umgeleitete App wieder: sofort fortsetzen.
+        if let (key, tap) = taps.first(where: { $0.value.processObjectIDs.contains(id) }),
+           tap.isPaused, Self.isRunningOutput(id) {
+            tap.setPaused(false)
+            lastPlaying[key] = Date()
+            scheduleTimer()
+        }
+        scheduleRefresh(devices: false)
+        // Ist die App verstummt, nach der Wartezeit pausieren.
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pauseDelay + 0.3) { [weak self] in
+            MainActor.assumeIsolated { self?.updatePauses() }
+        }
+    }
+
+    private static func isRunningOutput(_ id: AudioObjectID) -> Bool {
+        ((try? CAProperty.value(id, CAProperty.address(kAudioProcessPropertyIsRunningOutput),
+                                default: UInt32(0))) ?? 0) != 0
+    }
+
+    /// Kleiner Check nur der umgeleiteten Prozesse: spielen sie, laufen lassen;
+    /// sind sie länger still, pausieren.
+    private func updatePauses() {
+        guard !isPreview else { return }
+        var changed = false
+        for (key, tap) in taps {
+            if tap.processObjectIDs.contains(where: Self.isRunningOutput) {
+                lastPlaying[key] = Date()
+                if tap.isPaused { tap.setPaused(false); changed = true }
+            } else if !tap.isPaused,
+                      Date().timeIntervalSince(lastPlaying[key] ?? .distantPast) > Self.pauseDelay {
+                tap.setPaused(true)
+                changed = true
+            }
+        }
+        if changed { scheduleTimer() }
     }
 
     private func outputUID(for settings: AppSettings) -> String? {
@@ -470,6 +538,7 @@ final class MixerStore: ObservableObject {
             taps[group.id] = try AppTap(name: group.name, processObjectIDs: group.processObjectIDs,
                                         outputUID: uid, gain: settings.effectiveGain, eq: settings.eq,
                                         allowSplit: !splitUnsupported.contains(uid))
+            lastPlaying[group.id] = Date()
             tapErrors[group.id] = nil
         } catch {
             tapErrors[group.id] = String(describing: error)
@@ -479,6 +548,7 @@ final class MixerStore: ObservableObject {
 
     private func removeTap(_ key: String) {
         taps.removeValue(forKey: key)?.invalidate()
+        lastPlaying[key] = nil
     }
 
     private func stopAllTaps() {

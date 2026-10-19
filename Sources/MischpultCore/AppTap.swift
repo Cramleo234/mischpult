@@ -42,6 +42,22 @@ public final class AppTap {
     /// Hat der getrennte Weg schon Ton geliefert?
     public var hasDeliveredAudio: Bool { deliveredFrames.pointee > 0 }
 
+    /// Pausiert: Abgriff und Ausgabe angehalten (spart Strom, Ausgabegerät darf ruhen).
+    public private(set) var isPaused = false
+
+    /// Hält die Verarbeitung an, während die App still ist, bzw. setzt sie fort.
+    public func setPaused(_ paused: Bool) {
+        guard paused != isPaused, let ioProcID, aggregateID != kAudioObjectUnknown else { return }
+        if paused {
+            output?.pause()
+            AudioDeviceStop(aggregateID, ioProcID)
+        } else {
+            AudioDeviceStart(aggregateID, ioProcID)
+            try? output?.start()
+        }
+        isPaused = paused
+    }
+
     /// - Parameter allowSplit: false erzwingt den kombinierten Weg (z. B. wenn der
     ///   getrennte auf diesem Gerät keinen Ton geliefert hat).
     public init(name: String, processObjectIDs: [AudioObjectID], outputUID: String,
@@ -53,7 +69,9 @@ public final class AppTap {
         let description = CATapDescription(stereoMixdownOfProcesses: processObjectIDs)
         description.uuid = UUID()
         description.name = "Mischpult – \(name)"
-        description.muteBehavior = .mutedWhenTapped
+        // Immer stumm, solange der Tap existiert – auch während einer Pause. So ist
+        // die App beim Wiedereinsetzen nie kurz ungeregelt laut zu hören.
+        description.muteBehavior = .muted
         description.isPrivate = true
         self.description = description
         // Vorläufig; die echte Abtastrate kennt erst das Aggregat.
@@ -318,6 +336,11 @@ final class SplitOutput {
     func start() throws {
         guard let unit else { return }
         try check(AudioOutputUnitStart(unit), "Ausgabe starten")
+    }
+
+    func pause() {
+        guard let unit else { return }
+        AudioOutputUnitStop(unit)
     }
 
     /// Neue Abtastrate des Abgriffs: Ausgabe kurz anhalten und neu einstellen.

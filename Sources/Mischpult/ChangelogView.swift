@@ -18,6 +18,18 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.6.2", date: "19.10.2026",
+            de: [
+                "Noch stromsparender: Im Ruhezustand braucht Mischpult jetzt praktisch keine Rechenleistung mehr.",
+                "Ist eine umgeleitete App still, pausiert Mischpult die Verarbeitung – das Ausgabegerät (auch Bluetooth-Kopfhörer) kann ruhen. Spielt die App wieder, geht es sofort weiter.",
+                "Statt regelmäßig nachzusehen, lässt sich Mischpult von macOS benachrichtigen, wenn Apps Ton oder Mikrofon starten oder stoppen.",
+            ],
+            en: [
+                "Even more power-efficient: when idle, Mischpult now uses virtually no CPU.",
+                "When a rerouted app is silent, Mischpult pauses processing – the output device (including Bluetooth headphones) can rest. It resumes instantly when the app plays again.",
+                "Instead of checking periodically, Mischpult is notified by macOS when apps start or stop sound or the microphone.",
+            ]),
+        ChangelogEntry(
             version: "1.6.1", date: "19.10.2026",
             de: [
                 "Behebt den sehr hohen Stromverbrauch seit 1.5.0: Mischpult braucht jetzt rund 0,3 % statt etwa 25 % Rechenleistung.",

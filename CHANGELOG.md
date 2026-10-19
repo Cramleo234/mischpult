@@ -2,6 +2,13 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.6.2 – 19.10.2026
+
+**Noch stromsparender**
+- Umleitung pausiert, wenn die App still ist: Nach 3 Sekunden ohne Ton hält Mischpult Abgriff und Ausgabe an, das Ausgabegerät (auch Bluetooth-Kopfhörer) kann ruhen. Meldet macOS, dass die App wieder spielt, läuft die Umleitung sofort weiter. Während der Pause bleibt die App stumm, damit sie beim Wiedereinsetzen nie kurz ungeregelt laut ist; ein kleiner Check alle 3 s sorgt dafür, dass keine App versehentlich still bleibt.
+- Benachrichtigung statt Nachsehen: macOS meldet pro Audio-Prozess, wenn er Ton oder Mikrofon startet oder stoppt. Bei geschlossenem Fenster fragt Mischpult nicht mehr alle 5 s alle Prozesse ab, sondern nur noch als Sicherheitsnetz einmal pro Minute.
+- Gemessen im Ruhezustand: 0,0 % CPU und über viele Sekunden keine Weckrufe (vorher 0,3–0,6 %).
+
 ## 1.6.1 – 19.10.2026
 
 **Stromverbrauch**
