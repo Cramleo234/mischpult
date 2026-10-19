@@ -90,6 +90,14 @@ enum UIAudit {
         store.toggleMasterMute()
         store.previewSet(permission: .denied)
         capture("09-erlaubnis-fehlt")
+        store.previewSet(permission: .granted)
+        store.previewSetCallMode(CallModeStatus(deviceName: "AirPods Max von Marc", appNames: ["Discord"],
+                                                defaultInputIsBluetooth: true))
+        capture("09b-telefon-modus")
+        store.previewSetCallMode(CallModeStatus(deviceName: "AirPods Max von Marc", appNames: ["Zoom"],
+                                                defaultInputIsBluetooth: false))
+        capture("09c-telefon-modus-fest-gewaehlt")
+        store.previewSetCallMode(nil)
         store.previewSet(apps: [], permission: .granted)
         capture("10-keine-apps")
         let many = (1...9).map { index in

@@ -8,6 +8,20 @@ public struct AudioProcess: Hashable, Sendable {
     public let pid: pid_t
     public let bundleID: String?
     public let isRunningOutput: Bool
+    /// Nimmt der Prozess gerade auf (Mikrofon)?
+    public var isRunningInput = false
+    /// Geräte, von denen der Prozess gerade aufnimmt.
+    public var inputDeviceIDs: [AudioObjectID] = []
+
+    public init(objectID: AudioObjectID, pid: pid_t, bundleID: String?, isRunningOutput: Bool,
+                isRunningInput: Bool = false, inputDeviceIDs: [AudioObjectID] = []) {
+        self.objectID = objectID
+        self.pid = pid
+        self.bundleID = bundleID
+        self.isRunningOutput = isRunningOutput
+        self.isRunningInput = isRunningInput
+        self.inputDeviceIDs = inputDeviceIDs
+    }
 }
 
 /// Alle Audio-Prozesse einer App (z. B. Safari plus seine Web-Inhalt-Prozesse).
@@ -36,8 +50,16 @@ public enum AudioProcesses {
             let bundle = CAProperty.string(id, CAProperty.address(kAudioProcessPropertyBundleID))
             let running = (try? CAProperty.value(id, CAProperty.address(kAudioProcessPropertyIsRunningOutput),
                                                  default: UInt32(0))) ?? 0
+            let recording = (try? CAProperty.value(id, CAProperty.address(kAudioProcessPropertyIsRunningInput),
+                                                   default: UInt32(0))) ?? 0
+            let inputDevices = recording != 0
+                ? (try? CAProperty.array(id, CAProperty.address(kAudioProcessPropertyDevices,
+                                                                scope: kAudioObjectPropertyScopeInput),
+                                         of: AudioObjectID.self, filler: 0)) ?? []
+                : []
             return AudioProcess(objectID: id, pid: pid, bundleID: bundle?.isEmpty == false ? bundle : nil,
-                                isRunningOutput: running != 0)
+                                isRunningOutput: running != 0, isRunningInput: recording != 0,
+                                inputDeviceIDs: inputDevices)
         }
     }
 

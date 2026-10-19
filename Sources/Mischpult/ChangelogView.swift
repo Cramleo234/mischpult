@@ -18,6 +18,18 @@ struct ChangelogEntry: Identifiable {
 enum Changelog {
     static let entries: [ChangelogEntry] = [
         ChangelogEntry(
+            version: "1.6.0", date: "19.10.2026",
+            de: [
+                "Neu: „Bluetooth-Kopfhörer in Musikqualität halten“ (Zahnrad-Menü, standardmäßig an): Wird ein Kopfhörer-Mikrofon zum Standard-Eingang, schaltet Mischpult auf das eingebaute Mikrofon zurück – die Kopfhörer springen nicht in den Telefon-Modus.",
+                "Neu: Meldung, wenn Kopfhörer trotzdem in den Telefon-Modus gehen – mit der verursachenden App und dem Knopf „Telefon-Modus beenden“.",
+                "Bei Bluetooth-Kopfhörern benutzt Mischpult beim Umleiten ihr Mikrofon nicht mehr; liefert dieser Weg keinen Ton, wird automatisch der bisherige benutzt.",
+            ],
+            en: [
+                "New: “Keep Bluetooth headphones in music quality” (gear menu, on by default): if a headphone microphone becomes the default input, Mischpult switches back to the built-in microphone so the headphones don’t drop into call mode.",
+                "New: a notification when headphones still drop into call mode – naming the app responsible, with an “End call mode” button.",
+                "With Bluetooth headphones, Mischpult no longer touches their microphone when rerouting audio; if that path delivers no sound, the previous one is used automatically.",
+            ]),
+        ChangelogEntry(
             version: "1.5.0", date: "19.10.2026",
             de: [
                 "Neu: Lautstärke der Mitteilungstöne – eigener Regler mit Glocke unter der Gesamtlautstärke, unabhängig von ihr (Wunsch aus Issue #1).",

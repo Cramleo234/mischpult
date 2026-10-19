@@ -42,3 +42,8 @@
 "Mitteilungstöne einschalten" = "Mitteilungstöne einschalten";
 "Mitteilungstöne stummschalten" = "Mitteilungstöne stummschalten";
 "Lautstärke der Mitteilungstöne" = "Lautstärke der Mitteilungstöne";
+"Bluetooth-Kopfhörer in Musikqualität halten" = "Bluetooth-Kopfhörer in Musikqualität halten";
+"Telefon-Modus beenden" = "Telefon-Modus beenden";
+"%@ im Telefon-Modus" = "%@ im Telefon-Modus";
+"%@ benutzt das Kopfhörer-Mikrofon, dadurch klingt der Ton schlechter. Mischpult kann auf das eingebaute Mikrofon umschalten." = "%@ benutzt das Kopfhörer-Mikrofon, dadurch klingt der Ton schlechter. Mischpult kann auf das eingebaute Mikrofon umschalten.";
+"%@ hat das Kopfhörer-Mikrofon fest gewählt, dadurch klingt der Ton schlechter. Stelle dort das Mikrofon auf „Standard“ oder das eingebaute Mikrofon." = "%@ hat das Kopfhörer-Mikrofon fest gewählt, dadurch klingt der Ton schlechter. Stelle dort das Mikrofon auf „Standard“ oder das eingebaute Mikrofon.";

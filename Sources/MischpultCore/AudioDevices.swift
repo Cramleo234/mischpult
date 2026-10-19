@@ -21,6 +21,10 @@ public struct AudioDevice: Identifiable, Hashable, Sendable {
         self.transportType = transportType
     }
 
+    public var isBluetooth: Bool {
+        transportType == kAudioDeviceTransportTypeBluetooth || transportType == kAudioDeviceTransportTypeBluetoothLE
+    }
+
     /// SF-Symbol passend zur Geräteart.
     public var symbolName: String {
         let lower = name.lowercased()
@@ -50,6 +54,15 @@ public enum AudioDevices {
     }
 
     public static func outputs() -> [AudioDevice] { all().filter(\.hasOutput) }
+
+    /// Ersatz-Eingang statt eines Bluetooth-Mikrofons: bevorzugt das eingebaute
+    /// Mikrofon, sonst irgendein Eingang, der nicht über Bluetooth läuft.
+    /// Benutzt eine App das Bluetooth-Mikrofon, schalten die Kopfhörer in den
+    /// Telefon-Modus (schlechte Tonqualität) – das soll vermieden werden.
+    public static func inputAvoidingBluetooth(_ inputs: [AudioDevice]) -> AudioDevice? {
+        let candidates = inputs.filter { $0.hasInput && !$0.isBluetooth }
+        return candidates.first { $0.transportType == kAudioDeviceTransportTypeBuiltIn } ?? candidates.first
+    }
     public static func inputs() -> [AudioDevice] { all().filter(\.hasInput) }
 
     public static func device(for id: AudioObjectID) -> AudioDevice? {
@@ -88,6 +101,10 @@ public enum AudioDevices {
             // Systemtöne folgen der Ausgabe, wie es auch die Systemeinstellungen tun.
             try? CAProperty.set(system, CAProperty.address(kAudioHardwarePropertyDefaultSystemOutputDevice), id)
         }
+    }
+
+    public static func deviceID(forUID uid: String) -> AudioObjectID? {
+        all().first { $0.uid == uid }?.id
     }
 
     public static func uid(of id: AudioObjectID) -> String? {

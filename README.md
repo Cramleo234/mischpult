@@ -9,6 +9,7 @@ Ein kostenloses Hobbyprojekt: eine Menüleisten-App für macOS, mit der jede App
 - **Eigenes Ausgabegerät pro App:** Zum Beispiel Musik auf die Lautsprecher, Discord auf die Kopfhörer. Standard ist „Systemausgabe“; die App folgt dann dem Gerät, das in macOS gewählt ist.
 - **Equalizer pro App:** Bässe, Mitten und Höhen jeweils ±12 dB – ein Klick auf den App-Namen öffnet Ausgabe und Equalizer.
 - **Mitteilungstöne:** eigener Regler für die Lautstärke von Hinweis- und Mitteilungstönen, unabhängig von der Gesamtlautstärke; Klick auf die Glocke schaltet sie stumm.
+- **Bluetooth-Kopfhörer in Musikqualität:** verhindert, dass Kopfhörer durch ihr Mikrofon in den Telefon-Modus springen, und meldet, welche App es trotzdem auslöst – mit Knopf zum Beenden.
 - **Pegelanzeige:** Unter jedem Regler zeigt ein Balken, wie laut die App gerade ist.
 - **Geräte im Griff:** Aus- und Eingabegerät des Systems wechseln, Gesamtlautstärke und Mikrofonpegel regeln, alles im selben Fenster.
 - **Merkt sich alles:** Einstellungen gelten pro App und werden beim nächsten Start der App wieder angewendet.

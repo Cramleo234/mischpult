@@ -15,6 +15,11 @@ struct MixerView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Header()
+            if let callMode = store.callMode {
+                CallModeBanner(status: callMode)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 6)
+            }
             if store.permission == .denied {
                 PermissionBanner()
                     .padding(.horizontal, 12)
@@ -171,6 +176,7 @@ private struct OptionsMenu: View {
             Toggle("Alle Apps anzeigen", isOn: $store.showAllApps)
             Toggle("Beim Anmelden starten", isOn: Binding(get: { store.launchAtLogin },
                                                           set: { store.setLaunchAtLogin($0) }))
+            Toggle("Bluetooth-Kopfhörer in Musikqualität halten", isOn: $store.keepBluetoothQuality)
             Divider()
             Button("Ton-Einstellungen öffnen …") { store.openSoundSettings() }
             Button("Erlaubnis Systemaudio …") { store.openPermissionSettings() }
@@ -194,6 +200,33 @@ private struct OptionsMenu: View {
 
     private var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
+    }
+}
+
+// MARK: Hinweis Telefon-Modus
+
+private struct CallModeBanner: View {
+    @EnvironmentObject private var store: MixerStore
+    let status: CallModeStatus
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(String(format: L("%@ im Telefon-Modus"), status.deviceName), systemImage: "phone.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.orange)
+                .lineLimit(1)
+            Text(CallModeText.explanation(status))
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if status.defaultInputIsBluetooth {
+                Button("Telefon-Modus beenden") { store.fixCallMode() }
+                    .controlSize(.small)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.orange.opacity(0.12)))
     }
 }
 

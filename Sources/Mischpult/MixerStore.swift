@@ -42,6 +42,19 @@ final class MixerStore: ObservableObject {
         }
     }
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled
+    /// Bluetooth-Kopfhörer im Telefon-Modus (nur bei geschlossenem Fenster aktualisiert,
+    /// damit sich die Fensterhöhe beim Bedienen nicht ändert).
+    @Published private(set) var callMode: CallModeStatus?
+    private var notifiedCallMode: CallModeStatus?
+    /// Verhindert den Telefon-Modus von Bluetooth-Kopfhörern: Wird ein Bluetooth-
+    /// Mikrofon zum Standard-Eingang, schaltet Mischpult auf das eingebaute zurück.
+    @Published var keepBluetoothQuality: Bool {
+        didSet {
+            guard !isPreview else { return }
+            defaults.set(keepBluetoothQuality, forKey: "keepBluetoothQuality")
+            if keepBluetoothQuality { avoidBluetoothInput() }
+        }
+    }
     @Published private(set) var launchAtLoginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
 
     private let defaults = UserDefaults.standard
@@ -58,6 +71,8 @@ final class MixerStore: ObservableObject {
     /// App-Symbole einmal laden statt bei jedem Neuzeichnen (20 × pro Sekunde).
     private var icons: [String: NSImage] = [:]
     private var lastTapAttempt: [String: Date] = [:]
+    /// Ausgabegeräte, auf denen der getrennte Bluetooth-Weg keinen Ton geliefert hat.
+    private var splitUnsupported: Set<String> = []
     /// Prüfmodus (MISCHPULT_UIAUDIT): nur Beispieldaten, kein Zugriff auf Ton oder Geräte.
     let isPreview: Bool
 
@@ -65,6 +80,7 @@ final class MixerStore: ObservableObject {
     init(preview apps: [AppEntry], outputs: [AudioDevice], inputs: [AudioDevice]) {
         isPreview = true
         showAllApps = false
+        keepBluetoothQuality = true
         self.apps = apps
         self.outputs = outputs
         self.inputs = inputs
@@ -92,6 +108,7 @@ final class MixerStore: ObservableObject {
     init() {
         isPreview = false
         showAllApps = defaults.bool(forKey: "showAllApps")
+        keepBluetoothQuality = defaults.object(forKey: "keepBluetoothQuality") as? Bool ?? true
         if let data = defaults.data(forKey: "appSettings"),
            let stored = try? JSONDecoder().decode([String: AppSettings].self, from: data) {
             settings = stored
@@ -108,6 +125,7 @@ final class MixerStore: ObservableObject {
                                                object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.stopAllTaps() }
         }
+        CallModeNotifier.shared.setUp(store: self)
         refreshAll()
         scheduleTimer()
     }
@@ -169,6 +187,7 @@ final class MixerStore: ObservableObject {
         let outputChanged = newDefault != defaultOutputID
         defaultOutputID = newDefault
         defaultInputID = AudioDevices.defaultDevice(input: true)
+        avoidBluetoothInput()
         refreshVolumes()
         if outputChanged {
             // Apps, die der Systemausgabe folgen, auf das neue Gerät umziehen.
@@ -220,6 +239,48 @@ final class MixerStore: ObservableObject {
         }
     }
 
+    // MARK: Telefon-Modus
+
+    private func updateCallMode(groups: [AudioAppGroup], force: Bool) {
+        let status = BluetoothCallMode.detect(groups: groups, devices: inputs, defaultInputID: defaultInputID)
+        // Hinweis im Fenster nur ändern, solange es zu ist (sonst verrutscht es).
+        if !isVisible || force { callMode = status }
+        if let status, status != notifiedCallMode {
+            CallModeNotifier.shared.notify(status)
+        } else if status == nil, notifiedCallMode != nil {
+            CallModeNotifier.shared.clear()
+        }
+        notifiedCallMode = status
+    }
+
+    /// „Telefon-Modus beenden“: Standard-Eingang weg vom Bluetooth-Mikrofon.
+    func fixCallMode() {
+        guard !isPreview, let replacement = AudioDevices.inputAvoidingBluetooth(inputs) else { return }
+        AudioDevices.setDefaultDevice(replacement.id, input: true)
+        defaultInputID = AudioDevices.defaultDevice(input: true)
+        CallModeNotifier.shared.clear()
+        // Apps brauchen einen Moment, um auf den neuen Eingang zu wechseln.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            MainActor.assumeIsolated { self?.refreshApps(force: true) }
+        }
+    }
+
+    /// Nur für den Prüfmodus.
+    func previewSetCallMode(_ status: CallModeStatus?) {
+        guard isPreview else { return }
+        callMode = status
+    }
+
+    /// Ist ein Bluetooth-Mikrofon Standard-Eingang geworden (macOS macht das beim
+    /// Verbinden von Kopfhörern oft selbst), auf einen anderen Eingang wechseln.
+    private func avoidBluetoothInput() {
+        guard keepBluetoothQuality, !isPreview,
+              let current = inputs.first(where: { $0.id == defaultInputID }), current.isBluetooth,
+              let replacement = AudioDevices.inputAvoidingBluetooth(inputs) else { return }
+        AudioDevices.setDefaultDevice(replacement.id, input: true)
+        defaultInputID = AudioDevices.defaultDevice(input: true)
+    }
+
     var defaultOutput: AudioDevice? { outputs.first { $0.id == defaultOutputID } }
     var defaultInput: AudioDevice? { inputs.first { $0.id == defaultInputID } }
 
@@ -231,6 +292,8 @@ final class MixerStore: ObservableObject {
 
     func selectInput(_ device: AudioDevice) {
         if isPreview { defaultInputID = device.id; return }
+        // Bewusst ein Bluetooth-Mikrofon gewählt: Der Wunsch gilt, der Schutz geht aus.
+        if device.isBluetooth && keepBluetoothQuality { keepBluetoothQuality = false }
         AudioDevices.setDefaultDevice(device.id, input: true)
         refreshAll()
     }
@@ -263,6 +326,7 @@ final class MixerStore: ObservableObject {
     func refreshApps(force: Bool = false) {
         guard !isPreview else { return }
         let groups = AudioProcesses.groups()
+        updateCallMode(groups: groups, force: force)
         var entries: [AppEntry] = []
         for group in groups {
             if group.isPlaying { seenPlaying.insert(group.id) }
@@ -338,7 +402,12 @@ final class MixerStore: ObservableObject {
     private func ensureTap(for group: AudioAppGroup, settings: AppSettings) {
         guard let uid = outputUID(for: settings) else { return }
         if let tap = taps[group.id] {
-            if tap.outputUID != uid {
+            // Kontrolle des Bluetooth-Wegs: Spielt die App, kommt aber nach drei Sekunden
+            // kein Ton an, auf diesem Gerät dauerhaft den bewährten Weg benutzen.
+            let silentSplit = tap.mode == .split && group.isPlaying && !tap.hasDeliveredAudio
+                && Date().timeIntervalSince(tap.createdAt) > 3
+            if silentSplit { splitUnsupported.insert(uid) }
+            if tap.outputUID != uid || silentSplit {
                 removeTap(group.id)
             } else {
                 do {
@@ -360,7 +429,8 @@ final class MixerStore: ObservableObject {
         lastTapAttempt[group.id] = Date()
         do {
             taps[group.id] = try AppTap(name: group.name, processObjectIDs: group.processObjectIDs,
-                                        outputUID: uid, gain: settings.effectiveGain, eq: settings.eq)
+                                        outputUID: uid, gain: settings.effectiveGain, eq: settings.eq,
+                                        allowSplit: !splitUnsupported.contains(uid))
             tapErrors[group.id] = nil
         } catch {
             tapErrors[group.id] = String(describing: error)
@@ -477,6 +547,17 @@ final class MixerStore: ObservableObject {
         lines.append("Ausgabegeräte: " + AudioDevices.outputs().map(\.name).joined(separator: ", "))
         lines.append("Eingabegeräte: " + AudioDevices.inputs().map(\.name).joined(separator: ", "))
         lines.append("Erlaubnis Systemaudio: \(AudioPermission.status)")
+        let inputs = AudioDevices.inputs()
+        let defaultInput = AudioDevices.defaultDevice(input: true)
+        if let input = inputs.first(where: { $0.id == defaultInput }) {
+            lines.append("Eingang: \(input.name)" + (input.isBluetooth ? " (Bluetooth!)" : ""))
+        }
+        if let call = BluetoothCallMode.detect(groups: AudioProcesses.groups(), devices: inputs,
+                                               defaultInputID: defaultInput) {
+            lines.append("Telefon-Modus: \(call.deviceName) durch \(call.appNames.joined(separator: ", "))")
+        } else {
+            lines.append("Telefon-Modus: nein")
+        }
         lines.append("Mitteilungstöne: " + (AlertVolume.readNow().map { "\(AlertVolume.scriptValue($0)) %" } ?? "nicht lesbar"))
         for group in AudioProcesses.groups().sorted(by: { $0.name < $1.name }) {
             lines.append("App: \(group.name) [\(group.id)] Prozesse=\(group.processes.count)"

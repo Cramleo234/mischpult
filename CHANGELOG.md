@@ -2,6 +2,13 @@
 
 Alle Änderungen an Mischpult. Der gleiche Verlauf steht in der App unter **Zahnrad → Versionsverlauf …**.
 
+## 1.6.0 – 19.10.2026
+
+**Bluetooth-Kopfhörer bleiben in Musikqualität**
+- Neu im Zahnrad-Menü: **Bluetooth-Kopfhörer in Musikqualität halten** (standardmäßig an). Benutzt eine App das Mikrofon von Bluetooth-Kopfhörern, schalten diese in den Telefon-Modus mit deutlich schlechterem Klang. macOS macht das Kopfhörer-Mikrofon beim Verbinden oft selbst zum Standard-Eingang – Mischpult schaltet dann sofort auf das eingebaute Mikrofon zurück. Wer bewusst ein Bluetooth-Mikrofon unter „Eingabe“ wählt, schaltet den Schutz damit aus.
+- Neu: **Meldung bei Telefon-Modus** – als macOS-Mitteilung und als Hinweis im Fenster, mit der verursachenden App. Ist das Kopfhörer-Mikrofon Standard-Eingang, beendet „Telefon-Modus beenden“ ihn; hat eine App es fest gewählt, steht dort, was in dieser App umzustellen ist.
+- Mischpult selbst fasst das Kopfhörer-Mikrofon nicht mehr an: Bei Bluetooth-Geräten greift ein privates Hilfsgerät nur noch den App-Ton ab, ausgegeben wird über eine reine Ausgabe-Einheit mit abgeschaltetem Eingang. Liefert dieser Weg nach drei Sekunden keinen Ton, nimmt Mischpult automatisch den bisherigen.
+
 ## 1.5.0 – 19.10.2026
 
 - **Neu: Lautstärke der Mitteilungstöne.** Unter der Gesamtlautstärke gibt es einen eigenen Regler mit Glocke für Hinweis- und Mitteilungstöne, unabhängig von der Gesamtlautstärke ([Issue #1](https://github.com/Cramleo234/mischpult/issues/1)). Ein Klick auf die Glocke schaltet sie stumm und stellt danach den vorherigen Wert wieder her. Die Mitteilungen selbst erscheinen weiterhin; ganz abschalten lassen sie sich unter macOS über „Nicht stören“ bzw. Fokus.

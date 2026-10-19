@@ -7,7 +7,8 @@ let package = Package(
     platforms: [.macOS("14.2")],
     products: [.executable(name: "Mischpult", targets: ["Mischpult"])],
     targets: [
-        .target(name: "MischpultCore"),
+        .target(name: "MischpultAtomics"),
+        .target(name: "MischpultCore", dependencies: ["MischpultAtomics"]),
         .executableTarget(name: "Mischpult", dependencies: ["MischpultCore"]),
         .testTarget(name: "MischpultCoreTests", dependencies: ["MischpultCore"])
     ]
